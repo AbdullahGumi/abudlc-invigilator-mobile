@@ -26,11 +26,7 @@ const LoginScreen: React.FC = () => {
 
   const { login, loading } = useLoginWithPassword();
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, touchedFields },
-  } = useForm<LoginFormData>({
+  const { control, handleSubmit } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -47,14 +43,6 @@ const LoginScreen: React.FC = () => {
       setSnackbarType("error");
       setSnackbarVisible(true);
     }
-  };
-
-  const showError = (fieldName: keyof LoginFormData) => {
-    return touchedFields[fieldName] && !!errors[fieldName];
-  };
-
-  const getErrorMessage = (fieldName: keyof LoginFormData) => {
-    return touchedFields[fieldName] ? errors[fieldName]?.message : "";
   };
 
   return (
@@ -75,7 +63,10 @@ const LoginScreen: React.FC = () => {
           <Controller
             control={control}
             name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({
+              field: { onChange, onBlur, value },
+              fieldState: { error },
+            }) => (
               <View style={styles.inputContainer}>
                 <TextInput
                   label="Email"
@@ -86,11 +77,11 @@ const LoginScreen: React.FC = () => {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
-                  error={showError("email")}
+                  error={!!error}
                   disabled={loading}
                 />
-                <HelperText type="error" visible={showError("email")}>
-                  {getErrorMessage("email")}
+                <HelperText type="error" visible={!!error}>
+                  {error?.message}
                 </HelperText>
               </View>
             )}
@@ -99,7 +90,10 @@ const LoginScreen: React.FC = () => {
           <Controller
             control={control}
             name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({
+              field: { onChange, onBlur, value },
+              fieldState: { error },
+            }) => (
               <View style={styles.inputContainer}>
                 <TextInput
                   label="Password"
@@ -109,11 +103,11 @@ const LoginScreen: React.FC = () => {
                   mode="outlined"
                   secureTextEntry
                   autoComplete="password"
-                  error={showError("password")}
+                  error={!!error}
                   disabled={loading}
                 />
-                <HelperText type="error" visible={showError("password")}>
-                  {getErrorMessage("password")}
+                <HelperText type="error" visible={!!error}>
+                  {error?.message}
                 </HelperText>
               </View>
             )}
