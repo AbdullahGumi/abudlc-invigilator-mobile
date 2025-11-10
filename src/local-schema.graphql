@@ -1,8 +1,0 @@
-type AuthState {
-  accessToken: String!
-  refreshToken: String!
-}
-
-extend type Query {
-  auth: AuthState
-}

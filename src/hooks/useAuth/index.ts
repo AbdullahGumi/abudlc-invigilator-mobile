@@ -1,28 +1,30 @@
 import { useCallback } from "react";
-import { useQuery } from "@apollo/client/react";
-import { AUTH_STATE } from "./query";
+import * as SecureStore from "expo-secure-store";
+import { STORAGE_KEYS } from "../../constants";
+import { makeVar } from "@apollo/client";
+import { useReactiveVar } from "@apollo/client/react";
+
+const tokenVar = makeVar(SecureStore.getItem(STORAGE_KEYS.ACCESS_TOKEN));
 
 export default function useAuth() {
-  const { data, client } = useQuery(AUTH_STATE);
+  const isLoggedIn = useReactiveVar(tokenVar);
 
   const setAuthState = useCallback(
-    async ({
-      accessToken,
-      refreshToken,
-    }: {
-      accessToken: string;
-      refreshToken: string;
-    }) => {
-      client.writeQuery({
-        query: AUTH_STATE,
-        data: { auth: { __typename: "AuthState", accessToken, refreshToken } },
-      });
+    async ({ accessToken }: { accessToken: string }) => {
+      SecureStore.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+      tokenVar(accessToken);
     },
-    [client],
+    [],
   );
 
+  const clearAuthState = useCallback(async () => {
+    await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
+    tokenVar(null);
+  }, []);
+
   return {
-    isLoggedIn: !!data?.auth,
+    isLoggedIn,
     setAuthState,
+    clearAuthState,
   };
 }

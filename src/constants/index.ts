@@ -1,4 +1,4 @@
-const baseUrl = "http://192.168.0.166:8082";
+const baseUrl = "http://192.168.0.166:4000";
 
 // API Configuration
 export const CONFIG = {

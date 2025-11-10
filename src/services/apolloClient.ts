@@ -1,9 +1,9 @@
 import { ApolloClient } from "@apollo/client";
 
-import { CONFIG } from "../constants";
+import { CONFIG, STORAGE_KEYS } from "../constants";
 import { cache } from "./cache";
 import { ApolloLink } from "@apollo/client";
-import { AUTH_STATE } from "../hooks/useAuth/query";
+import * as SecureStore from "expo-secure-store";
 import { HttpLink } from "@apollo/client";
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
 
@@ -21,15 +21,13 @@ const httpLink = new HttpLink({
 
 const authMiddleware = new ApolloLink((operation, forward) => {
   operation.setContext(({ headers = {} }) => {
-    const auth = operation.client.readQuery({ query: AUTH_STATE });
+    const accessToken = SecureStore.getItem(STORAGE_KEYS.ACCESS_TOKEN);
 
-    if (auth?.auth?.accessToken) {
+    if (accessToken) {
       return {
         headers: {
           ...headers,
-          authorization: auth.auth.accessToken
-            ? `Bearer ${auth.auth.accessToken}`
-            : undefined,
+          authorization: accessToken ? `Bearer ${accessToken}` : undefined,
         },
       };
     }
