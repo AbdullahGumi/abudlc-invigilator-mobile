@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { TextInput, Menu, Button, Text } from "react-native-paper";
+import { Menu, Button, Text } from "react-native-paper";
 import { Posting } from "../types";
 
 interface SelectTeamMemberProps {

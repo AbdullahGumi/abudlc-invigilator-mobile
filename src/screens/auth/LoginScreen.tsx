@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Alert, ScrollView } from "react-native";
+import React from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
 import {
   TextInput,
   Button,
@@ -9,37 +9,19 @@ import {
 } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigation } from "@react-navigation/native";
-import { z } from "zod";
 
 import Logo from "../../components/Logo";
-import { useAuth } from "../../contexts/AuthContext";
-import { LoginFormData } from "../../types";
-import { VALIDATION_RULES } from "../../constants";
-
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .regex(VALIDATION_RULES.EMAIL_REGEX, "Invalid email address"),
-  password: z.string().min(1, "Password is required"),
-});
+import useLoginWithPassword, {
+  loginSchema,
+  type LoginFormData,
+} from "../../hooks/useLoginWithPassword";
+import useAuth from "../../hooks/useAuth";
 
 const LoginScreen: React.FC = () => {
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
-    "success"
-  );
+  const { setAuthState } = useAuth();
+  const { login, loading, error, onReset } = useLoginWithPassword();
 
-  const navigation = useNavigation();
-  const { login, isLoading, isAuthenticated } = useAuth();
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, touchedFields },
-  } = useForm<LoginFormData>({
+  const { control, handleSubmit } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -47,32 +29,15 @@ const LoginScreen: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Verification" as never }],
+  const onSubmit = async (values: LoginFormData) => {
+    const data = await login(values);
+
+    if (data?.accessToken && data?.refreshToken) {
+      await setAuthState({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
       });
     }
-  }, [isAuthenticated, navigation]);
-
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      await login(data);
-    } catch (error) {
-      const errorMessage = error instanceof Error && error.message;
-      setSnackbarMessage(errorMessage || "Login failed. Please try again.");
-      setSnackbarType("error");
-      setSnackbarVisible(true);
-    }
-  };
-
-  const showError = (fieldName: keyof LoginFormData) => {
-    return touchedFields[fieldName] && !!errors[fieldName];
-  };
-
-  const getErrorMessage = (fieldName: keyof LoginFormData) => {
-    return touchedFields[fieldName] ? errors[fieldName]?.message : "";
   };
 
   return (
@@ -93,7 +58,10 @@ const LoginScreen: React.FC = () => {
           <Controller
             control={control}
             name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({
+              field: { onChange, onBlur, value },
+              fieldState: { error },
+            }) => (
               <View style={styles.inputContainer}>
                 <TextInput
                   label="Email"
@@ -104,11 +72,11 @@ const LoginScreen: React.FC = () => {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
-                  error={showError("email")}
-                  disabled={isLoading}
+                  error={!!error}
+                  disabled={loading}
                 />
-                <HelperText type="error" visible={showError("email")}>
-                  {getErrorMessage("email")}
+                <HelperText type="error" visible={!!error}>
+                  {error?.message}
                 </HelperText>
               </View>
             )}
@@ -117,7 +85,10 @@ const LoginScreen: React.FC = () => {
           <Controller
             control={control}
             name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({
+              field: { onChange, onBlur, value },
+              fieldState: { error },
+            }) => (
               <View style={styles.inputContainer}>
                 <TextInput
                   label="Password"
@@ -127,11 +98,11 @@ const LoginScreen: React.FC = () => {
                   mode="outlined"
                   secureTextEntry
                   autoComplete="password"
-                  error={showError("password")}
-                  disabled={isLoading}
+                  error={!!error}
+                  disabled={loading}
                 />
-                <HelperText type="error" visible={showError("password")}>
-                  {getErrorMessage("password")}
+                <HelperText type="error" visible={!!error}>
+                  {error?.message}
                 </HelperText>
               </View>
             )}
@@ -140,27 +111,14 @@ const LoginScreen: React.FC = () => {
           <Button
             mode="contained"
             onPress={handleSubmit(onSubmit)}
-            loading={isLoading}
-            disabled={isLoading}
+            loading={loading}
+            disabled={loading}
             style={styles.loginButton}
           >
-            {isLoading ? "Logging in..." : "Login"}
+            Login
           </Button>
         </View>
       </View>
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={4000}
-        style={{
-          backgroundColor: snackbarType === "success" ? "#4CAF50" : "#F44336",
-          zIndex: 1000,
-          marginBottom: 60,
-        }}
-      >
-        {snackbarMessage}
-      </Snackbar>
 
       <View style={styles.footer}>
         <Text variant="bodySmall" style={styles.copyright}>
@@ -168,6 +126,18 @@ const LoginScreen: React.FC = () => {
           Learning Centre.
         </Text>
       </View>
+
+      {error && (
+        <Snackbar
+          visible={!!error}
+          onDismiss={onReset}
+          style={{
+            backgroundColor: "#F44336",
+          }}
+        >
+          {error?.message}
+        </Snackbar>
+      )}
     </ScrollView>
   );
 };

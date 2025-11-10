@@ -1,20 +1,16 @@
+const baseUrl = "http://192.168.0.166:4000";
+
 // API Configuration
-export const API_CONFIG = {
-  GRAPHQL_URL:
-    process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.100:4000/graphql",
-  REST_API_URL:
-    process.env.EXPO_PUBLIC_REST_API_URL || "http://192.168.1.100:4000",
-  APP_ENV: process.env.EXPO_PUBLIC_APP_ENV || "development",
-  CLIENT_ID: "cmhs47ial00010fakyt13f08k",
+export const CONFIG = {
+  GRAPHQL_URL: `${baseUrl}/graphql`,
+  REST_API_URL: `${baseUrl}/v1`,
+  APP_ENV: "development",
+  CLIENT_ID: "cmetwfh3v00018oj12woe6gpc",
 };
 
 // Storage Keys
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: "accessToken",
+  REFRESH_TOKEN: "refreshToken",
   USER_DATA: "userData",
-};
-
-// Validation Rules
-export const VALIDATION_RULES = {
-  EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
 };

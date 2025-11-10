@@ -1,5 +1,6 @@
 import React from "react";
 import { Image, StyleSheet } from "react-native";
+import logo from "../../assets/logo.png";
 
 interface LogoProps {
   size?: number;
@@ -8,7 +9,7 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({ size = 40 }) => {
   return (
     <Image
-      source={require("../../assets/logo.png")}
+      source={logo}
       style={[styles.logo, { width: size, height: size }]}
       resizeMode="contain"
     />

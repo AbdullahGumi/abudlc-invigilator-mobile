@@ -1,48 +1,42 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
-import { setContext } from "@apollo/client/link/context";
+import { ApolloClient } from "@apollo/client";
+
+import { CONFIG, STORAGE_KEYS } from "../constants";
+import { cache } from "./cache";
+import { ApolloLink } from "@apollo/client";
 import * as SecureStore from "expo-secure-store";
+import { HttpLink } from "@apollo/client";
+import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
 
-import { API_CONFIG, STORAGE_KEYS } from "../constants";
+if (CONFIG.APP_ENV === "development") {
+  loadDevMessages();
+  loadErrorMessages();
+}
 
-const httpLink = createHttpLink({
-  uri: API_CONFIG.GRAPHQL_URL,
+const httpLink = new HttpLink({
+  uri: CONFIG.GRAPHQL_URL,
+  headers: {
+    client_id: CONFIG.CLIENT_ID,
+  },
 });
 
-const authLink = setContext(async (_, { headers }) => {
-  try {
-    const token = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
-    return {
-      headers: {
-        ...headers,
-        authorization: token ? `Bearer ${token}` : "",
-        client_id: API_CONFIG.CLIENT_ID,
-      },
-    };
-  } catch (error) {
-    console.warn("Error retrieving access token:", error);
-    return {
-      headers: {
-        ...headers,
-        client_id: API_CONFIG.CLIENT_ID,
-      },
-    };
-  }
+const authMiddleware = new ApolloLink((operation, forward) => {
+  operation.setContext(({ headers = {} }) => {
+    const accessToken = SecureStore.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+
+    if (accessToken) {
+      return {
+        headers: {
+          ...headers,
+          authorization: accessToken ? `Bearer ${accessToken}` : undefined,
+        },
+      };
+    }
+    return { headers };
+  });
+  return forward(operation);
 });
 
 export const client = new ApolloClient({
-  link: authLink.concat(httpLink),
-  cache: new InMemoryCache(),
-  defaultOptions: {
-    watchQuery: {
-      fetchPolicy: "cache-first",
-      errorPolicy: "ignore",
-    },
-    query: {
-      fetchPolicy: "cache-first",
-      errorPolicy: "all",
-    },
-    mutate: {
-      errorPolicy: "all",
-    },
-  },
+  link: authMiddleware.concat(httpLink),
+  cache,
 });
