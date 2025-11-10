@@ -15,3 +15,12 @@ export const AUTH_STATE: TypedDocumentNode<
     }
   }
 `;
+
+export const SET_AUTH = gql`
+  mutation SetAuth($accessToken: String!, $refreshToken: String!) @client {
+    setAuth(accessToken: $accessToken, refreshToken: $refreshToken) {
+      accessToken
+      refreshToken
+    }
+  }
+`;

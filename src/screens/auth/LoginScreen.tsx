@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import {
   TextInput,
@@ -18,15 +18,8 @@ import useLoginWithPassword, {
 import useAuth from "../../hooks/useAuth";
 
 const LoginScreen: React.FC = () => {
-  // TODO: abstract snackbar to a context
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
-    "success",
-  );
-
   const { setAuthState } = useAuth();
-  const { login, loading } = useLoginWithPassword();
+  const { login, loading, error, onReset } = useLoginWithPassword();
 
   const { control, handleSubmit } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -37,20 +30,13 @@ const LoginScreen: React.FC = () => {
   });
 
   const onSubmit = async (values: LoginFormData) => {
-    try {
-      const data = await login(values);
+    const data = await login(values);
 
-      if (data?.accessToken && data?.refreshToken) {
-        setAuthState({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-        });
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error && error.message;
-      setSnackbarMessage(errorMessage || "Login failed. Please try again.");
-      setSnackbarType("error");
-      setSnackbarVisible(true);
+    if (data?.accessToken && data?.refreshToken) {
+      setAuthState({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
     }
   };
 
@@ -134,25 +120,24 @@ const LoginScreen: React.FC = () => {
         </View>
       </View>
 
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={4000}
-        style={{
-          backgroundColor: snackbarType === "success" ? "#4CAF50" : "#F44336",
-          zIndex: 1000,
-          marginBottom: 60,
-        }}
-      >
-        {snackbarMessage}
-      </Snackbar>
-
       <View style={styles.footer}>
         <Text variant="bodySmall" style={styles.copyright}>
           © {new Date().getFullYear()} Ahmadu Bello University, Zaria. Distance
           Learning Centre.
         </Text>
       </View>
+
+      {error && (
+        <Snackbar
+          visible={!!error}
+          onDismiss={onReset}
+          style={{
+            backgroundColor: "#F44336",
+          }}
+        >
+          {error?.message}
+        </Snackbar>
+      )}
     </ScrollView>
   );
 };

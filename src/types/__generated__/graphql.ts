@@ -2544,6 +2544,19 @@ export type AuthStateQuery = {
   } | null;
 };
 
+export type SetAuthMutationVariables = Exact<{
+  accessToken: Scalars["String"]["input"];
+  refreshToken: Scalars["String"]["input"];
+}>;
+
+export type SetAuthMutation = {
+  setAuth: {
+    __typename: "AuthState";
+    accessToken: string;
+    refreshToken: string;
+  } | null;
+};
+
 export type LoginWithPasswordMutationVariables = Exact<{
   input: LoginWithPasswordInput;
 }>;

@@ -13,18 +13,22 @@ export const loginSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function useLoginWithPassword() {
-  const [mutate, { loading, data }] = useMutation(LOGIN_WITH_PASSWORD, {
-    onError(error) {
-      console.error("Login error:", error);
+  const [mutate, { loading, data, error, reset }] = useMutation(
+    LOGIN_WITH_PASSWORD,
+    {
+      onError(error) {
+        console.error("Login error:", error);
+      },
+      onCompleted(data) {
+        if (data.loginWithPassword.message) {
+          console.log("Login success:", data.loginWithPassword.message);
+        }
+      },
     },
-    onCompleted(data) {
-      if (data.loginWithPassword.message) {
-        console.log("Login success:", data.loginWithPassword.message);
-      }
-    },
-  });
+  );
 
   const login = useCallback(async (values: LoginFormData) => {
+    console.log("login", values);
     const { data } = await mutate({
       variables: {
         input: {
@@ -55,5 +59,7 @@ export default function useLoginWithPassword() {
     data: data?.loginWithPassword,
     login,
     loading,
+    error,
+    onReset: reset,
   };
 }
