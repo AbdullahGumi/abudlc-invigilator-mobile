@@ -5,7 +5,7 @@ export const API_CONFIG = {
   REST_API_URL:
     process.env.EXPO_PUBLIC_REST_API_URL || "http://192.168.1.100:4000",
   APP_ENV: process.env.EXPO_PUBLIC_APP_ENV || "development",
-  CLIENT_ID: "cmhs47ial00010fakyt13f08k",
+  CLIENT_ID: process.env.EXPO_PUBLIC_CLIENT_ID || "cmhs47ial00010fakyt13f08k",
 };
 
 // Storage Keys
