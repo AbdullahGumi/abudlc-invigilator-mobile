@@ -1,8 +1,8 @@
-type Auth {
+type AuthState {
   accessToken: String!
   refreshToken: String!
 }
 
 extend type Query {
-  auth: Auth
+  auth: AuthState
 }

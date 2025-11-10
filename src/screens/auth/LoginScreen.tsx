@@ -15,6 +15,7 @@ import useLoginWithPassword, {
   loginSchema,
   type LoginFormData,
 } from "../../hooks/useLoginWithPassword";
+import useAuth from "../../hooks/useAuth";
 
 const LoginScreen: React.FC = () => {
   // TODO: abstract snackbar to a context
@@ -24,6 +25,7 @@ const LoginScreen: React.FC = () => {
     "success",
   );
 
+  const { setAuthState } = useAuth();
   const { login, loading } = useLoginWithPassword();
 
   const { control, handleSubmit } = useForm<LoginFormData>({
@@ -34,9 +36,16 @@ const LoginScreen: React.FC = () => {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (values: LoginFormData) => {
     try {
-      await login(data);
+      const data = await login(values);
+
+      if (data?.accessToken && data?.refreshToken) {
+        setAuthState({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error && error.message;
       setSnackbarMessage(errorMessage || "Login failed. Please try again.");
