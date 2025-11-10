@@ -1,0 +1,80 @@
+export interface User {
+  id: string;
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  staffId?: string;
+  picture?: UserPicture;
+}
+
+export interface UserPicture {
+  id: string;
+  uri: string;
+  thumbnailUri: string;
+}
+
+export interface Posting {
+  id: string;
+  user: User;
+  attendance?: Attendance[];
+}
+
+export interface Attendance {
+  id: string;
+  createdAt: string;
+  picture?: AttendancePicture;
+}
+
+export interface AttendancePicture {
+  id: string;
+  uri: string;
+  thumbnailUri: string;
+}
+
+export interface AuthResponse {
+  success?: boolean;
+  message?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  user?: User;
+}
+
+export interface VerificationResponse {
+  success: boolean;
+  message?: string;
+  detail?: string;
+  confidence?: number;
+  isMatch?: boolean;
+}
+
+export interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (data: LoginFormData) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+export type RootStackParamList = {
+  Login: undefined;
+  Verification: undefined;
+};
+
+export interface GeolocationData {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  timestamp?: number;
+}
+
+export interface TeamMemberCardProps {
+  member: Posting;
+  onVerify: (member: Posting) => void;
+  verificationStatus: "pending" | "completed" | "failed";
+}
