@@ -16,7 +16,8 @@ const httpLink = new HttpLink({
 
 const authMiddleware = new ApolloLink((operation, forward) => {
   operation.setContext(({ headers = {} }) => {
-    const auth = cache.readQuery({ query: AUTH_STATE });
+    const auth = operation.client.readQuery({ query: AUTH_STATE });
+
     if (auth?.auth?.accessToken) {
       return {
         headers: {
