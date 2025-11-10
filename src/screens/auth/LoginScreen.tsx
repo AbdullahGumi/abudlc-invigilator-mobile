@@ -33,7 +33,7 @@ const LoginScreen: React.FC = () => {
     const data = await login(values);
 
     if (data?.accessToken && data?.refreshToken) {
-      setAuthState({
+      await setAuthState({
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
       });

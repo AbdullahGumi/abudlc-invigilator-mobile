@@ -10,8 +10,15 @@ export default function useAuth() {
   const isLoggedIn = useReactiveVar(tokenVar);
 
   const setAuthState = useCallback(
-    async ({ accessToken }: { accessToken: string }) => {
-      SecureStore.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+    async ({
+      accessToken,
+      refreshToken,
+    }: {
+      accessToken: string;
+      refreshToken: string;
+    }) => {
+      await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+      await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
       tokenVar(accessToken);
     },
     [],
