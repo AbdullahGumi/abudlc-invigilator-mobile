@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import {
   TextInput,
@@ -9,17 +9,12 @@ import {
 } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigation } from "@react-navigation/native";
-import { z } from "zod";
 
 import Logo from "../../components/Logo";
-import { useAuth } from "../../contexts/AuthContext";
-import { LoginFormData } from "../../types";
-
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
-});
+import useLoginWithPassword, {
+  loginSchema,
+  type LoginFormData,
+} from "../../hooks/useLoginWithPassword";
 
 const LoginScreen: React.FC = () => {
   // TODO: abstract snackbar to a context
@@ -29,8 +24,7 @@ const LoginScreen: React.FC = () => {
     "success",
   );
 
-  const navigation = useNavigation();
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { login, loading } = useLoginWithPassword();
 
   const {
     control,
@@ -43,15 +37,6 @@ const LoginScreen: React.FC = () => {
       password: "",
     },
   });
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Verification" as never }],
-      });
-    }
-  }, [isAuthenticated, navigation]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -102,7 +87,7 @@ const LoginScreen: React.FC = () => {
                   autoCapitalize="none"
                   autoComplete="email"
                   error={showError("email")}
-                  disabled={isLoading}
+                  disabled={loading}
                 />
                 <HelperText type="error" visible={showError("email")}>
                   {getErrorMessage("email")}
@@ -125,7 +110,7 @@ const LoginScreen: React.FC = () => {
                   secureTextEntry
                   autoComplete="password"
                   error={showError("password")}
-                  disabled={isLoading}
+                  disabled={loading}
                 />
                 <HelperText type="error" visible={showError("password")}>
                   {getErrorMessage("password")}
@@ -137,11 +122,11 @@ const LoginScreen: React.FC = () => {
           <Button
             mode="contained"
             onPress={handleSubmit(onSubmit)}
-            loading={isLoading}
-            disabled={isLoading}
+            loading={loading}
+            disabled={loading}
             style={styles.loginButton}
           >
-            {isLoading ? "Logging in..." : "Login"}
+            Login
           </Button>
         </View>
       </View>

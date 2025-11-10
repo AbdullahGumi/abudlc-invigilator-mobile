@@ -7,6 +7,7 @@ import { lightTheme } from "./src/constants/theme";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { client } from "./src/services/apolloClient";
 import AppNavigator from "./src/navigation/AppNavigator";
+import { NavigationContainer } from "@react-navigation/native";
 
 export default function App() {
   return (
@@ -14,7 +15,9 @@ export default function App() {
       <PaperProvider theme={lightTheme}>
         <ApolloProvider client={client}>
           <AuthProvider>
-            <AppNavigator />
+            <NavigationContainer>
+              <AppNavigator />
+            </NavigationContainer>
           </AuthProvider>
         </ApolloProvider>
       </PaperProvider>

@@ -1,11 +1,16 @@
 import { useMutation } from "@apollo/client";
-import * as SecureStore from "expo-secure-store";
 import { useCallback } from "react";
 
-import { STORAGE_KEYS } from "../../constants";
 import { GET_USER_SESSION, LOGIN_WITH_PASSWORD } from "./mutation";
-import { LoginFormData } from "../../types";
 import { IdentityType, PasswordType } from "../../types/__generated__/graphql";
+import { z } from "zod";
+
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function useLoginWithPassword() {
   const [mutate, { loading, data }] = useMutation(LOGIN_WITH_PASSWORD, {
@@ -31,11 +36,7 @@ export default function useLoginWithPassword() {
       },
       update(cache, { data }) {
         if (data?.loginWithPassword.user) {
-          const { user, accessToken } = data.loginWithPassword;
-
-          if (accessToken) {
-            SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-          }
+          const { user } = data.loginWithPassword;
 
           cache.writeQuery({
             query: GET_USER_SESSION,
