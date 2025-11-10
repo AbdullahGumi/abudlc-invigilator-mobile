@@ -5,15 +5,7 @@ import {} from "../types/__generated__/graphql";
 
 export const localState = new LocalState({
   resolvers: {
-    Query: {
-      auth: async () => {
-        return {
-          accessToken: SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
-          refreshToken: await SecureStore.getItemAsync(
-            STORAGE_KEYS.REFRESH_TOKEN,
-          ),
-        };
-      },
+    Mutation: {
       setAuth: async (_, { accessToken, refreshToken }) => {
         await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
         await SecureStore.setItemAsync(
