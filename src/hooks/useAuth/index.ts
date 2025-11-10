@@ -1,6 +1,10 @@
 import { useCallback } from "react";
+import { useQuery } from "@apollo/client/react";
+import { AUTH_STATE } from "./query";
 
 export default function useAuth() {
+  const { data } = useQuery(AUTH_STATE);
+
   const setAuthState = useCallback(
     ({
       accessToken,
@@ -15,7 +19,7 @@ export default function useAuth() {
   );
 
   return {
-    isLoggedIn: false,
+    isLoggedIn: !!data?.auth,
     setAuthState,
   };
 }

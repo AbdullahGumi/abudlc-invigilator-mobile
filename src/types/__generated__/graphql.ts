@@ -374,12 +374,6 @@ export type AttendanceSortInput = {
   updatedAt?: InputMaybe<SortOrder>;
 };
 
-export type Auth = {
-  __typename: "Auth";
-  accessToken: Scalars["String"]["output"];
-  refreshToken: Scalars["String"]["output"];
-};
-
 export type AuthResponse = Response & {
   __typename: "AuthResponse";
   accessToken: Maybe<Scalars["JWT"]["output"]>;
@@ -393,6 +387,12 @@ export type AuthResponse = Response & {
 export type AuthRule = {
   allow: AuthStrategy;
   ownerField?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type AuthState = {
+  __typename: "AuthState";
+  accessToken: Scalars["String"]["output"];
+  refreshToken: Scalars["String"]["output"];
 };
 
 export enum AuthStrategy {
@@ -1750,7 +1750,7 @@ export type Query = {
   assessmentCenter: Maybe<AssessmentCenter>;
   assessmentCenters: AssessmentCenterList;
   attendance: Maybe<Attendance>;
-  auth: Maybe<Auth>;
+  auth: Maybe<AuthState>;
   banks: Array<Taxonomy>;
   centerConfiguration: CenterConfiguration;
   cohort: Maybe<Cohort>;
@@ -2526,6 +2526,16 @@ export type VerifyPhoneNumberInput = {
 export type VerifyUserInput = {
   staffId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
+};
+
+export type AuthStateQueryVariables = Exact<{ [key: string]: never }>;
+
+export type AuthStateQuery = {
+  auth: {
+    __typename: "AuthState";
+    accessToken: string;
+    refreshToken: string;
+  } | null;
 };
 
 export type LoginWithPasswordMutationVariables = Exact<{
