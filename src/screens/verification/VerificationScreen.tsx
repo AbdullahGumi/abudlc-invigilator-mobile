@@ -133,12 +133,29 @@ const VerificationScreen: React.FC = () => {
 
   const handleStartVerification = useCallback(async () => {
     if (!cameraPermission) {
-      setSnackbarMessage(
-        "Camera permission is required for face verification. Please grant permission and try again."
-      );
-      setSnackbarType("error");
-      setSnackbarVisible(true);
-      return;
+      const cameraStatus = await Camera.requestCameraPermissionsAsync();
+      setCameraPermission(cameraStatus.granted);
+      if (!cameraStatus.granted) {
+        setSnackbarMessage(
+          "Camera permission is required for face verification. Please grant permission and try again."
+        );
+        setSnackbarType("error");
+        setSnackbarVisible(true);
+        return;
+      }
+    }
+
+    if (!locationPermission) {
+      const locationStatus = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(locationStatus.granted);
+      if (!locationStatus.granted) {
+        setSnackbarMessage(
+          "Location permission is required for attendance tracking. Please grant permission and try again."
+        );
+        setSnackbarType("error");
+        setSnackbarVisible(true);
+        return;
+      }
     }
 
     setCapturedImage(null);
@@ -148,6 +165,7 @@ const VerificationScreen: React.FC = () => {
     }
   }, [
     cameraPermission,
+    locationPermission,
     getLocationForVerification,
     geolocation,
     geolocationError,
@@ -382,20 +400,19 @@ const VerificationScreen: React.FC = () => {
               </View>
             </View>
           )}
-
-          {/* <Snackbar
-            visible={snackbarVisible}
-            onDismiss={() => setSnackbarVisible(false)}
-            duration={4000}
-            style={{
-              backgroundColor:
-                snackbarType === "success" ? "#4CAF50" : "#F44336",
-            }}
-          >
-            {snackbarMessage}
-          </Snackbar> */}
         </View>
       </ScrollView>
+
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={4000}
+        style={{
+          backgroundColor: snackbarType === "success" ? "#4CAF50" : "#F44336",
+        }}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </View>
   );
 };
