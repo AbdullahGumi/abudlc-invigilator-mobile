@@ -1,0 +1,8 @@
+type Auth {
+  accessToken: String!
+  refreshToken: String!
+}
+
+extend type Query {
+  auth: Auth
+}

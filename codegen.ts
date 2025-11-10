@@ -11,6 +11,7 @@ const config: CodegenConfig = {
         },
       },
     },
+    "src/local.graphql",
   ],
   // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
   documents: ["src/**/*.{ts,tsx}"],
