@@ -132,12 +132,26 @@ const VerificationScreen: React.FC = () => {
   }, [getCurrentLocation]);
 
   const handleStartVerification = useCallback(async () => {
+    if (!cameraPermission) {
+      setSnackbarMessage(
+        "Camera permission is required for face verification. Please grant permission and try again."
+      );
+      setSnackbarType("error");
+      setSnackbarVisible(true);
+      return;
+    }
+
     setCapturedImage(null);
     await getLocationForVerification();
     if (geolocation || !geolocationError) {
       setIsCameraActive(true);
     }
-  }, [getLocationForVerification, geolocation, geolocationError]);
+  }, [
+    cameraPermission,
+    getLocationForVerification,
+    geolocation,
+    geolocationError,
+  ]);
 
   const takePicture = useCallback(async () => {
     if (!cameraRef.current) return;
@@ -235,31 +249,6 @@ const VerificationScreen: React.FC = () => {
   const retryLocation = useCallback(async () => {
     await getLocationForVerification();
   }, [getLocationForVerification]);
-
-  if (!cameraPermission || !locationPermission) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContainer}>
-          <Text variant="headlineSmall" style={styles.title}>
-            Permissions Required
-          </Text>
-          <Text variant="bodyMedium" style={styles.permissionText}>
-            {!cameraPermission &&
-              "Camera permission is required for face verification.\n"}
-            {!locationPermission &&
-              "Location permission is required for attendance tracking."}
-          </Text>
-          <Button
-            mode="contained"
-            onPress={requestPermissions}
-            style={styles.permissionButton}
-          >
-            Grant Permissions
-          </Button>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>

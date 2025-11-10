@@ -19,7 +19,7 @@ export default function useLoginWithPassword() {
   });
 
   const login = useCallback(async (values: LoginFormData) => {
-    const { data } = await mutate({
+    const result = await mutate({
       variables: {
         input: {
           identityType: "EMAIL",
@@ -46,7 +46,11 @@ export default function useLoginWithPassword() {
       },
     });
 
-    return data?.loginWithPassword;
+    if (result.errors && result.errors.length > 0) {
+      throw new Error(result.errors[0].message);
+    }
+
+    return result.data?.loginWithPassword;
   }, []);
 
   return {
