@@ -1,16 +1,21 @@
 import { ApolloClient } from "@apollo/client";
-import { localState } from "./localState";
 
-import { API_CONFIG } from "../constants";
+import { CONFIG } from "../constants";
 import { cache } from "./cache";
 import { ApolloLink } from "@apollo/client";
 import { AUTH_STATE } from "../hooks/useAuth/query";
 import { HttpLink } from "@apollo/client";
+import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
+
+if (CONFIG.APP_ENV === "development") {
+  loadDevMessages();
+  loadErrorMessages();
+}
 
 const httpLink = new HttpLink({
-  uri: API_CONFIG.GRAPHQL_URL,
+  uri: CONFIG.GRAPHQL_URL,
   headers: {
-    client_id: API_CONFIG.CLIENT_ID,
+    client_id: CONFIG.CLIENT_ID,
   },
 });
 
@@ -36,5 +41,4 @@ const authMiddleware = new ApolloLink((operation, forward) => {
 export const client = new ApolloClient({
   link: authMiddleware.concat(httpLink),
   cache,
-  localState,
 });

@@ -1,7 +1,7 @@
 const baseUrl = "http://192.168.0.166:8082";
 
 // API Configuration
-export const API_CONFIG = {
+export const CONFIG = {
   GRAPHQL_URL: `${baseUrl}/graphql`,
   REST_API_URL: `${baseUrl}/v1`,
   APP_ENV: "development",

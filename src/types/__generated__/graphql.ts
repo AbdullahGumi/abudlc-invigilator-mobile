@@ -1207,7 +1207,6 @@ export type Mutation = {
   sendUserVerificationEmail: MutationResponse;
   sendUserVerificationSMS: MutationResponse;
   setAdmins: ManyUserResponse;
-  setAuth: Maybe<AuthState>;
   signedUpdatePostedUser: UserResponse;
   tick: Scalars["String"]["output"];
   unpublishCohort: CohortResponse;
@@ -1509,11 +1508,6 @@ export type MutationSetAdminsArgs = {
   ids: Array<Scalars["ID"]["input"]>;
   isAdmin: Scalars["Boolean"]["input"];
   reason?: InputMaybe<Scalars["String"]["input"]>;
-};
-
-export type MutationSetAuthArgs = {
-  accessToken: Scalars["String"]["input"];
-  refreshToken: Scalars["String"]["input"];
 };
 
 export type MutationSignedUpdatePostedUserArgs = {
@@ -2538,19 +2532,6 @@ export type AuthStateQueryVariables = Exact<{ [key: string]: never }>;
 
 export type AuthStateQuery = {
   auth: {
-    __typename: "AuthState";
-    accessToken: string;
-    refreshToken: string;
-  } | null;
-};
-
-export type SetAuthMutationVariables = Exact<{
-  accessToken: Scalars["String"]["input"];
-  refreshToken: Scalars["String"]["input"];
-}>;
-
-export type SetAuthMutation = {
-  setAuth: {
     __typename: "AuthState";
     accessToken: string;
     refreshToken: string;

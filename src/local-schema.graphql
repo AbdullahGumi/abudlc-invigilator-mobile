@@ -6,7 +6,3 @@ type AuthState {
 extend type Query {
   auth: AuthState
 }
-
-extend type Mutation {
-  setAuth(accessToken: String!, refreshToken: String!): AuthState
-}

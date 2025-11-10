@@ -8,17 +8,8 @@ export const AUTH_STATE: TypedDocumentNode<
   AuthStateQuery,
   AuthStateQueryVariables
 > = gql`
-  query AuthState @client {
+  query AuthState {
     auth {
-      accessToken
-      refreshToken
-    }
-  }
-`;
-
-export const SET_AUTH = gql`
-  mutation SetAuth($accessToken: String!, $refreshToken: String!) @client {
-    setAuth(accessToken: $accessToken, refreshToken: $refreshToken) {
       accessToken
       refreshToken
     }

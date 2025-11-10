@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useQuery } from "@apollo/client/react";
-import { AUTH_STATE, SET_AUTH } from "./query";
+import { AUTH_STATE } from "./query";
 
 export default function useAuth() {
   const { data, client } = useQuery(AUTH_STATE);
@@ -13,12 +13,12 @@ export default function useAuth() {
       accessToken: string;
       refreshToken: string;
     }) => {
-      await client.mutate({
-        mutation: SET_AUTH,
-        variables: { accessToken, refreshToken },
+      client.writeQuery({
+        query: AUTH_STATE,
+        data: { auth: { __typename: "AuthState", accessToken, refreshToken } },
       });
     },
-    [],
+    [client],
   );
 
   return {

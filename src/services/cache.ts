@@ -17,6 +17,17 @@ export const cache = new InMemoryCache({
               ),
             };
           },
+          async merge(_, value) {
+            await SecureStore.setItemAsync(
+              STORAGE_KEYS.ACCESS_TOKEN,
+              value.accessToken,
+            );
+            await SecureStore.setItemAsync(
+              STORAGE_KEYS.REFRESH_TOKEN,
+              value.refreshToken,
+            );
+            return value;
+          },
         },
       },
     },
