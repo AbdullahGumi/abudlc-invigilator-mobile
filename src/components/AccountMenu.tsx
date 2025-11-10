@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Menu, Avatar, Text, Button, Divider } from "react-native-paper";
+import { Menu, Avatar, Text, Divider } from "react-native-paper";
 
 import { useAuth } from "../contexts/AuthContext";
 
@@ -47,7 +47,7 @@ const AccountMenu: React.FC = () => {
             ) : (
               <Avatar.Text
                 size={40}
-                label={user.fullName?.[0]?.toUpperCase()!}
+                label={user.fullName?.[0]?.toUpperCase() ?? ""}
                 style={styles.avatar}
               />
             )}
@@ -68,7 +68,7 @@ const AccountMenu: React.FC = () => {
             ) : (
               <Avatar.Text
                 size={48}
-                label={user.fullName?.[0]?.toUpperCase()!}
+                label={user.fullName?.[0]?.toUpperCase() ?? ""}
                 style={styles.menuAvatar}
               />
             )}

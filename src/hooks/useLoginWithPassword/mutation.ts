@@ -1,3 +1,6 @@
+/**
+ * We should follow this pattern of colocating the mutations and queries in the folder as their hook file.
+ */
 import { gql, TypedDocumentNode } from "@apollo/client";
 import {
   LoginWithPasswordMutation,
@@ -6,6 +9,7 @@ import {
   GetUserSessionQueryVariables,
 } from "../../types/__generated__/graphql";
 
+// Ensure mutation and queries are typed for better type safety and autocompletion.
 export const LOGIN_WITH_PASSWORD: TypedDocumentNode<
   LoginWithPasswordMutation,
   LoginWithPasswordMutationVariables
