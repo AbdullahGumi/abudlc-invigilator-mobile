@@ -6,15 +6,14 @@ import * as Location from "expo-location";
 
 import { Posting, GeolocationData, VerificationResponse } from "../../types";
 import SelectTeamMember from "../../components/SelectTeamMember";
-import AccountMenu from "../../components/AccountMenu";
 
 const VerificationScreen: React.FC = () => {
   const [postingId, setPostingId] = useState<string>("");
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(
-    null
+    null,
   );
   const [locationPermission, setLocationPermission] = useState<boolean | null>(
-    null
+    null,
   );
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -25,7 +24,7 @@ const VerificationScreen: React.FC = () => {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarType, setSnackbarType] = useState<"success" | "error">(
-    "success"
+    "success",
   );
 
   const cameraRef = useRef<CameraView>(null);
@@ -137,7 +136,7 @@ const VerificationScreen: React.FC = () => {
       setCameraPermission(cameraStatus.granted);
       if (!cameraStatus.granted) {
         setSnackbarMessage(
-          "Camera permission is required for face verification. Please grant permission and try again."
+          "Camera permission is required for face verification. Please grant permission and try again.",
         );
         setSnackbarType("error");
         setSnackbarVisible(true);
@@ -150,7 +149,7 @@ const VerificationScreen: React.FC = () => {
       setLocationPermission(locationStatus.granted);
       if (!locationStatus.granted) {
         setSnackbarMessage(
-          "Location permission is required for attendance tracking. Please grant permission and try again."
+          "Location permission is required for attendance tracking. Please grant permission and try again.",
         );
         setSnackbarType("error");
         setSnackbarVisible(true);
@@ -270,10 +269,6 @@ const VerificationScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <AccountMenu />
-      </View>
-
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.contentContainer}
