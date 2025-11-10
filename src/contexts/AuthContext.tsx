@@ -1,11 +1,17 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useQuery } from "@apollo/client";
 import * as SecureStore from "expo-secure-store";
 
 import { AuthContextType, LoginFormData, User } from "../types";
 import { STORAGE_KEYS } from "../constants";
-import { GET_USER_SESSION } from "../services/graphql";
 import useLoginWithPassword from "../hooks/useLoginWithPassword";
+import { GET_USER_SESSION } from "../hooks/useLoginWithPassword/mutation";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -17,11 +23,7 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuthState = async () => {
     try {
       const accessToken = await SecureStore.getItemAsync(
-        STORAGE_KEYS.ACCESS_TOKEN
+        STORAGE_KEYS.ACCESS_TOKEN,
       );
       const userData = await SecureStore.getItemAsync(STORAGE_KEYS.USER_DATA);
 
@@ -61,20 +63,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (data: LoginFormData) => {
-    try {
-      const result = await loginWithPassword(data);
+    const result = await loginWithPassword(data);
 
-      if (result?.success && result.user) {
-        await SecureStore.setItemAsync(
-          STORAGE_KEYS.USER_DATA,
-          JSON.stringify(result.user)
-        );
-        setUser(result.user as User);
-      } else {
-        throw new Error(result?.message || "Login failed");
-      }
-    } catch (error) {
-      throw error;
+    if (result?.success && result.user) {
+      await SecureStore.setItemAsync(
+        STORAGE_KEYS.USER_DATA,
+        JSON.stringify(result.user),
+      );
+      setUser(result.user as User);
+    } else {
+      throw new Error(result?.message || "Login failed");
     }
   };
 

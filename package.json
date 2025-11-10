@@ -8,13 +8,15 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.8.0",
     "@hookform/resolvers": "^3.3.0",
     "@react-navigation/native": "^6.1.0",
     "@react-navigation/stack": "^6.3.0",
+    "dotenv": "^17.2.3",
     "expo": "~54.0.23",
     "expo-camera": "~17.0.9",
     "expo-location": "~19.0.7",
@@ -33,6 +35,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@graphql-codegen/cli": "^6.0.1",
+    "@graphql-codegen/typed-document-node": "^6.1.0",
+    "@graphql-codegen/typescript": "^5.0.2",
+    "@graphql-codegen/typescript-operations": "^5.0.2",
     "@types/react": "~19.1.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react": "^7.37.5",

@@ -15,13 +15,9 @@ import { z } from "zod";
 import Logo from "../../components/Logo";
 import { useAuth } from "../../contexts/AuthContext";
 import { LoginFormData } from "../../types";
-import { VALIDATION_RULES } from "../../constants";
 
 const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .regex(VALIDATION_RULES.EMAIL_REGEX, "Invalid email address"),
+  email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -29,7 +25,7 @@ const LoginScreen: React.FC = () => {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarType, setSnackbarType] = useState<"success" | "error">(
-    "success"
+    "success",
   );
 
   const navigation = useNavigation();

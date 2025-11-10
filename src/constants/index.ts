@@ -13,8 +13,3 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN: "accessToken",
   USER_DATA: "userData",
 };
-
-// Validation Rules
-export const VALIDATION_RULES = {
-  EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-};

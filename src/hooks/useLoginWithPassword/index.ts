@@ -2,9 +2,10 @@ import { useMutation } from "@apollo/client";
 import * as SecureStore from "expo-secure-store";
 import { useCallback } from "react";
 
-import { STORAGE_KEYS } from "../constants";
-import { LOGIN_WITH_PASSWORD, GET_USER_SESSION } from "../services/graphql";
-import { LoginFormData } from "../types";
+import { STORAGE_KEYS } from "../../constants";
+import { GET_USER_SESSION, LOGIN_WITH_PASSWORD } from "./mutation";
+import { LoginFormData } from "../../types";
+import { IdentityType, PasswordType } from "../../types/__generated__/graphql";
 
 export default function useLoginWithPassword() {
   const [mutate, { loading, data }] = useMutation(LOGIN_WITH_PASSWORD, {
@@ -19,11 +20,11 @@ export default function useLoginWithPassword() {
   });
 
   const login = useCallback(async (values: LoginFormData) => {
-    const result = await mutate({
+    const { data } = await mutate({
       variables: {
         input: {
-          identityType: "EMAIL",
-          passwordType: "DATABASE",
+          identityType: IdentityType.Email,
+          passwordType: PasswordType.Database,
           identity: values.email,
           password: values.password,
         },
@@ -46,11 +47,7 @@ export default function useLoginWithPassword() {
       },
     });
 
-    if (result.errors && result.errors.length > 0) {
-      throw new Error(result.errors[0].message);
-    }
-
-    return result.data?.loginWithPassword;
+    return data?.loginWithPassword;
   }, []);
 
   return {
