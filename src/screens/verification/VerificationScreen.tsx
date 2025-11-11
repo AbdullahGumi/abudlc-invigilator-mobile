@@ -1,12 +1,23 @@
 import React, { useState, useRef, useCallback } from "react";
-import { View, StyleSheet, ScrollView, Image, StatusBar } from "react-native";
-import { Text, Button, Snackbar, FAB } from "react-native-paper";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+} from "react-native";
+import { Text, Button, Snackbar, FAB, Avatar } from "react-native-paper";
 import { Camera, CameraView } from "expo-camera";
 import * as Location from "expo-location";
+import * as SecureStore from "expo-secure-store";
+import { useNavigation } from "@react-navigation/native";
 
-import { Posting, GeolocationData, VerificationResponse } from "../../types";
+import { GeolocationData } from "../../types";
 import SelectTeamMember from "../../components/SelectTeamMember";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { CONFIG, STORAGE_KEYS } from "../../constants";
+import useCurrentUser from "../../hooks/useCurrentUser";
+import { useTeamMembers } from "../../hooks/useTeamMembers";
 
 const VerificationScreen: React.FC = () => {
   const [postingId, setPostingId] = useState<string>("");
@@ -25,63 +36,18 @@ const VerificationScreen: React.FC = () => {
   const [snackbarType, setSnackbarType] = useState<"success" | "error">(
     "success",
   );
+  const [attendanceExpanded, setAttendanceExpanded] = useState(false);
+  const [resetTrigger, setResetTrigger] = useState(0);
 
   const cameraRef = useRef<CameraView>(null);
-
-  const teamMembers: Posting[] = [
-    {
-      id: "1",
-      user: {
-        id: "1",
-        fullName: "John Doe",
-        staffId: "STF001",
-        picture: {
-          id: "pic1",
-          thumbnailUri: "https://via.placeholder.com/100",
-          uri: "https://via.placeholder.com/400",
-        },
-      },
-    },
-    {
-      id: "2",
-      user: {
-        id: "2",
-        fullName: "Jane Smith",
-        staffId: "STF002",
-        picture: {
-          id: "pic2",
-          thumbnailUri: "https://via.placeholder.com/100",
-          uri: "https://via.placeholder.com/400",
-        },
-      },
-    },
-    {
-      id: "3",
-      user: {
-        id: "3",
-        fullName: "Mike Johnson",
-        staffId: "STF003",
-        picture: {
-          id: "pic3",
-          thumbnailUri: "https://via.placeholder.com/100",
-          uri: "https://via.placeholder.com/400",
-        },
-      },
-    },
-    {
-      id: "4",
-      user: {
-        id: "4",
-        fullName: "Sarah Wilson",
-        staffId: "STF004",
-        picture: {
-          id: "pic4",
-          thumbnailUri: "https://via.placeholder.com/100",
-          uri: "https://via.placeholder.com/400",
-        },
-      },
-    },
-  ];
+  const navigation = useNavigation();
+  const { user } = useCurrentUser();
+  const {
+    data: teamMembersData,
+    loading: teamMembersLoading,
+    refetch,
+  } = useTeamMembers();
+  const teamMembers = teamMembersData;
 
   React.useEffect(() => {
     requestPermissions();
@@ -92,6 +58,12 @@ const VerificationScreen: React.FC = () => {
       startCameraImmediately();
     }
   }, [postingId]);
+
+  React.useEffect(() => {
+    if (isCameraActive) {
+      setAttendanceExpanded(false);
+    }
+  }, [isCameraActive]);
 
   const requestPermissions = async () => {
     try {
@@ -118,22 +90,21 @@ const VerificationScreen: React.FC = () => {
     };
   }, []);
 
-  const getLocationForVerification = useCallback(async (): Promise<GeolocationData | null> => {
+  const getLocationForVerification =
+    useCallback(async (): Promise<GeolocationData | null> => {
+      try {
+        const location = await getCurrentLocation();
+        setGeolocation(location);
+        return location;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to get location";
+        console.warn("Geolocation error:", errorMessage);
+        return null;
+      }
+    }, [getCurrentLocation]);
 
-    try {
-      const location = await getCurrentLocation();
-      setGeolocation(location);  
-      return location; 
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to get location";
-      console.warn("Geolocation error:", errorMessage);
-      return null; 
-    } finally {
-    }
-  }, [getCurrentLocation]);
-
-  const startCameraImmediately = useCallback(async () => { 
+  const startCameraImmediately = useCallback(async () => {
     if (!cameraPermission) {
       const cameraStatus = await Camera.requestCameraPermissionsAsync();
       setCameraPermission(cameraStatus.granted);
@@ -150,7 +121,6 @@ const VerificationScreen: React.FC = () => {
     setCapturedImage(null);
     setIsCameraActive(true);
   }, [cameraPermission]);
- 
 
   const handleFabPress = useCallback(async () => {
     if (!cameraRef.current) return;
@@ -175,12 +145,15 @@ const VerificationScreen: React.FC = () => {
       setSnackbarVisible(true);
     }
   }, []);
-  
 
   const retakePhoto = useCallback(() => {
     setCapturedImage(null);
     setIsCameraActive(true);
   }, []);
+
+  const handleProfilePress = useCallback(() => {
+    navigation.navigate("Profile" as never);
+  }, [navigation]);
 
   const verifyFace = useCallback(async () => {
     if (!capturedImage || !postingId) return;
@@ -189,21 +162,20 @@ const VerificationScreen: React.FC = () => {
 
     try {
       if (!locationPermission) {
-        const locationStatus = await Location.requestForegroundPermissionsAsync();
+        const locationStatus =
+          await Location.requestForegroundPermissionsAsync();
         setLocationPermission(locationStatus.granted);
         if (!locationStatus.granted) {
-          setSnackbarMessage(
-            "Location permission is required.",
-          );
+          setSnackbarMessage("Location permission is required.");
           setSnackbarType("error");
           setSnackbarVisible(true);
           setIsVerifying(false);
           return;
         }
       }
- 
+
       const locationData = await getLocationForVerification();
-      
+
       if (!locationData) {
         setSnackbarMessage("Unable to get location. Please try again.");
         setSnackbarType("error");
@@ -211,13 +183,14 @@ const VerificationScreen: React.FC = () => {
         setIsVerifying(false);
         return;
       }
+      const token = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
 
       const formData = new FormData();
       formData.append("picture", {
         uri: capturedImage,
         type: "image/jpeg",
         name: "face_verification.jpg",
-      } as any);
+      } as unknown as Blob);
       formData.append("latitude", locationData.latitude.toString());
       formData.append("longitude", locationData.longitude.toString());
       if (locationData.accuracy) {
@@ -227,28 +200,33 @@ const VerificationScreen: React.FC = () => {
         formData.append("timestamp", locationData.timestamp.toString());
       }
 
-      // const response = await fetch(`${API_CONFIG.REST_API_URL}/posting/${postingId}/verify`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //     'Content-Type': 'multipart/form-data'
-      //   },
-      //   body: formData
-      // });
+      const response = await fetch(
+        `${CONFIG.REST_API_URL}/posting/${postingId}/verify`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            client_id: CONFIG.CLIENT_ID,
+          },
+          body: formData,
+        },
+      );
 
-      const mockResponse: VerificationResponse = {
-        success: true,
-        message: "Face verification successful!",
-      };
+      const data = await response.json();
 
-      if (mockResponse.success) {
+      if (response.ok && data.success) {
         setSnackbarMessage("Face verified successfully");
         setSnackbarType("success");
         setPostingId("");
         setCapturedImage(null);
         setGeolocation(null);
+        setResetTrigger((prev) => prev + 1);
+        refetch();
       } else {
-        setSnackbarMessage(mockResponse.detail || "Verification failed");
+        console.log(data);
+        setSnackbarMessage(
+          data.detail || data.message || "Verification failed",
+        );
         setSnackbarType("error");
       }
       setSnackbarVisible(true);
@@ -260,33 +238,68 @@ const VerificationScreen: React.FC = () => {
     } finally {
       setIsVerifying(false);
     }
-  }, [capturedImage, postingId, locationPermission, getLocationForVerification, geolocation]);
- 
+  }, [
+    capturedImage,
+    postingId,
+    locationPermission,
+    getLocationForVerification,
+    geolocation,
+  ]);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.centerContainer}>
-          <Text variant="headlineLarge" style={styles.mainTitle}>
-            Face Verification
-          </Text>
+          <View style={styles.headerContainer}>
+            <Text variant="headlineLarge" style={styles.mainTitle}>
+              Face Verification
+            </Text>
+            {user?.picture?.uri ? (
+              <Avatar.Image
+                size={50}
+                source={{
+                  uri: user.picture.uri,
+                }}
+                style={styles.profileAvatar}
+                onTouchEnd={handleProfilePress}
+              />
+            ) : (
+              <TouchableOpacity
+                style={styles.avatarFallback}
+                onPress={handleProfilePress}
+              >
+                <Text style={styles.avatarText}>
+                  {user?.fullName?.[0]?.toUpperCase() || "?"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           <SelectTeamMember
-            value={postingId}
-            onChange={setPostingId}
+            key={resetTrigger}
+            onChange={(value) => {
+              setPostingId(value);
+              if (value === "") {
+                setIsCameraActive(false);
+                setCapturedImage(null);
+              }
+            }}
             teamMembers={teamMembers}
-            loading={false}
+            loading={teamMembersLoading}
+            disabled={isVerifying}
           />
 
-         {!capturedImage && <Text variant="bodyLarge" style={styles.instructionText}>
-            {" "}
-            Capture a photo of the team member’s face to verify their identity.
-          </Text>}
-
-
+          {!capturedImage && isCameraActive && (
+            <Text variant="bodyLarge" style={styles.instructionText}>
+              {" "}
+              Capture a photo of the team member’s face to verify their
+              identity.
+            </Text>
+          )}
 
           {isCameraActive && (
             <View style={styles.cameraSection}>
@@ -311,7 +324,7 @@ const VerificationScreen: React.FC = () => {
                 source={{ uri: capturedImage }}
                 style={styles.capturedImage}
                 resizeMode="contain"
-              /> 
+              />
 
               <View style={styles.verifyButtons}>
                 <Button
@@ -334,12 +347,81 @@ const VerificationScreen: React.FC = () => {
               </View>
             </View>
           )}
+
+          {(() => {
+            const attendanceRecords =
+              teamMembersData?.flatMap((member) =>
+                member.attendance.map((attendance) => ({
+                  member,
+                  attendance,
+                })),
+              ) || [];
+
+            return attendanceRecords.length > 0 ? (
+              <View style={styles.attendanceSection}>
+                <TouchableOpacity
+                  style={styles.attendanceHeader}
+                  onPress={() => setAttendanceExpanded(!attendanceExpanded)}
+                >
+                  <Text variant="titleMedium" style={styles.attendanceTitle}>
+                    Team Attendance ({attendanceRecords.length} records)
+                  </Text>
+                </TouchableOpacity>
+
+                {attendanceExpanded && (
+                  <View style={styles.attendanceList}>
+                    {attendanceRecords
+                      .sort(
+                        (a, b) =>
+                          new Date(b.attendance.createdAt).getTime() -
+                          new Date(a.attendance.createdAt).getTime(),
+                      )
+                      .map(({ member, attendance }) => (
+                        <View
+                          key={`${member.id}-${attendance.id}`}
+                          style={styles.attendanceCard}
+                        >
+                          <Image
+                            source={{ uri: attendance.picture?.uri }}
+                            style={styles.attendanceImage}
+                            resizeMode="cover"
+                          />
+                          <View style={styles.attendanceDetails}>
+                            <Text style={styles.attendanceName}>
+                              {member.user.fullName}
+                            </Text>
+                            <Text style={styles.attendanceInfo}>
+                              {member.user.staffId} -{" "}
+                              {member?.user?.userRole?.role?.displayName}
+                            </Text>
+                            <Text style={styles.attendanceTime}>
+                              {new Date(attendance.createdAt).toLocaleString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                },
+                              )}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                  </View>
+                )}
+              </View>
+            ) : null;
+          })()}
         </View>
       </ScrollView>
 
       {postingId && !capturedImage && (
         <FAB
           icon="camera"
+          size="large"
           color="white"
           onPress={handleFabPress}
           style={styles.fab}
@@ -366,10 +448,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 16,
   },
-  header: {
-    marginTop: StatusBar.currentHeight ? StatusBar.currentHeight + 16 : 60,
-    marginLeft: "auto",
-  },
   scrollContainer: {
     flex: 1,
   },
@@ -382,50 +460,38 @@ const styles = StyleSheet.create({
     maxWidth: 800,
     width: "100%",
   },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 24,
+  },
   mainTitle: {
     textAlign: "center",
-    marginBottom: 24,
     color: "#000",
+  },
+  profileAvatar: {
+    backgroundColor: "#f0f0f0",
+  },
+  avatarFallback: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#ccc",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
   },
   instructionText: {
     textAlign: "center",
     fontSize: 12,
     marginBottom: 8,
     color: "#666",
-  },
-  alert: {
-    backgroundColor: "#e3f2fd",
-    padding: 12,
-    borderRadius: 4,
-    marginBottom: 8,
-    width: "100%",
-  },
-  warningAlert: {
-    backgroundColor: "#fff3e0",
-    padding: 12,
-    borderRadius: 4,
-    marginBottom: 8,
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  successAlert: {
-    backgroundColor: "#e8f5e8",
-    padding: 12,
-    borderRadius: 4,
-    marginBottom: 8,
-    width: "100%",
-  },
-  alertText: {
-    color: "#000",
-    flex: 1,
-  },
-  buttonContainer: {
-    marginBottom: 8,
-  },
-  startButton: {
-    marginBottom: 8,
   },
   cameraSection: {
     marginBottom: 16,
@@ -434,7 +500,6 @@ const styles = StyleSheet.create({
   },
   cameraContainer: {
     height: 300,
-    borderRadius: 8,
     overflow: "hidden",
     marginVertical: 16,
     width: "100%",
@@ -442,19 +507,6 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
-  },
-  cameraButtons: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-  },
-  captureButton: {
-    flex: 1,
-    maxWidth: 150,
-  },
-  cancelButton: {
-    flex: 1,
-    maxWidth: 150,
   },
   photoSection: {
     marginBottom: 16,
@@ -468,13 +520,7 @@ const styles = StyleSheet.create({
   capturedImage: {
     width: 300,
     height: 300,
-    borderRadius: 8,
     marginBottom: 16,
-  },
-  locationRequired: {
-    color: "#d32f2f",
-    marginBottom: 16,
-    textAlign: "center",
   },
   verifyButtons: {
     flexDirection: "column",
@@ -487,28 +533,73 @@ const styles = StyleSheet.create({
   retakeButton: {
     maxWidth: 150,
   },
-  title: {
-    color: "#1976d2",
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  permissionText: {
-    marginBottom: 16,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  permissionButton: {
-    alignSelf: "center",
-  },
   fab: {
     position: "absolute",
     margin: 16,
     right: 0,
-    bottom: 100,
-    width: 60,height: 60,
-    justifyContent: 'center',alignItems: 'center',
-    backgroundColor: 'green',
-    borderRadius: 50
+    bottom: 50,
+    width: 75,
+    height: 75,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "green",
+    borderRadius: 50,
+  },
+  attendanceSection: {
+    marginTop: 24,
+    width: "100%",
+    alignItems: "center",
+  },
+  attendanceHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    paddingVertical: 12,
+    borderColor: "#e0e0e0",
+    marginBottom: 5,
+  },
+  attendanceTitle: {
+    marginBottom: 0,
+    color: "#000",
+  },
+  attendanceList: {
+    width: "100%",
+    gap: 12,
+  },
+  attendanceCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  attendanceImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 100,
+    marginRight: 12,
+  },
+  attendanceDetails: {
+    flex: 1,
+  },
+  attendanceName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: 4,
+  },
+  attendanceInfo: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+  },
+  attendanceTime: {
+    fontSize: 12,
+    color: "#888",
   },
 });
 

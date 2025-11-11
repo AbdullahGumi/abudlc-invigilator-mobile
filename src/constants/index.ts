@@ -1,11 +1,11 @@
-const baseUrl = "http://192.168.0.166:4000";
+const baseUrl = "http://172.20.10.2:4000";
 
 // API Configuration
 export const CONFIG = {
   GRAPHQL_URL: `${baseUrl}/graphql`,
   REST_API_URL: `${baseUrl}/v1`,
   APP_ENV: "development",
-  CLIENT_ID: "cmetwfh3v00018oj12woe6gpc",
+  CLIENT_ID: "cmhuauuay00010fxj6v40n8wc",
 };
 
 // Storage Keys
