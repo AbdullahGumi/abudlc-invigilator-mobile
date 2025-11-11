@@ -10,7 +10,7 @@ import { Text, Button, Snackbar, FAB, Avatar } from "react-native-paper";
 import { Camera, CameraView } from "expo-camera";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 import { GeolocationData } from "../../types";
 import SelectTeamMember from "../../components/SelectTeamMember";
@@ -64,6 +64,12 @@ const VerificationScreen: React.FC = () => {
       setAttendanceExpanded(false);
     }
   }, [isCameraActive]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const requestPermissions = async () => {
     try {
