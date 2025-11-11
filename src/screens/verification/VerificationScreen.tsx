@@ -1,11 +1,12 @@
 import React, { useState, useRef, useCallback } from "react";
 import { View, StyleSheet, ScrollView, Image, StatusBar } from "react-native";
-import { Text, Button, Snackbar } from "react-native-paper";
+import { Text, Button, Snackbar, FAB } from "react-native-paper";
 import { Camera, CameraView } from "expo-camera";
 import * as Location from "expo-location";
 
 import { Posting, GeolocationData, VerificationResponse } from "../../types";
 import SelectTeamMember from "../../components/SelectTeamMember";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const VerificationScreen: React.FC = () => {
   const [postingId, setPostingId] = useState<string>("");
@@ -18,8 +19,6 @@ const VerificationScreen: React.FC = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [geolocation, setGeolocation] = useState<GeolocationData | null>(null);
-  const [geolocationError, setGeolocationError] = useState<string | null>(null);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -88,6 +87,12 @@ const VerificationScreen: React.FC = () => {
     requestPermissions();
   }, []);
 
+  React.useEffect(() => {
+    if (postingId && !isCameraActive && !capturedImage) {
+      startCameraImmediately();
+    }
+  }, [postingId]);
+
   const requestPermissions = async () => {
     try {
       const cameraStatus = await Camera.requestCameraPermissionsAsync();
@@ -113,24 +118,22 @@ const VerificationScreen: React.FC = () => {
     };
   }, []);
 
-  const getLocationForVerification = useCallback(async () => {
-    setIsGettingLocation(true);
-    setGeolocationError(null);
+  const getLocationForVerification = useCallback(async (): Promise<GeolocationData | null> => {
 
     try {
       const location = await getCurrentLocation();
-      setGeolocation(location);
+      setGeolocation(location);  
+      return location; 
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to get location";
-      setGeolocationError(errorMessage);
       console.warn("Geolocation error:", errorMessage);
+      return null; 
     } finally {
-      setIsGettingLocation(false);
     }
   }, [getCurrentLocation]);
 
-  const handleStartVerification = useCallback(async () => {
+  const startCameraImmediately = useCallback(async () => { 
     if (!cameraPermission) {
       const cameraStatus = await Camera.requestCameraPermissionsAsync();
       setCameraPermission(cameraStatus.granted);
@@ -144,33 +147,12 @@ const VerificationScreen: React.FC = () => {
       }
     }
 
-    if (!locationPermission) {
-      const locationStatus = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(locationStatus.granted);
-      if (!locationStatus.granted) {
-        setSnackbarMessage(
-          "Location permission is required for attendance tracking. Please grant permission and try again.",
-        );
-        setSnackbarType("error");
-        setSnackbarVisible(true);
-        return;
-      }
-    }
-
     setCapturedImage(null);
-    await getLocationForVerification();
-    if (geolocation || !geolocationError) {
-      setIsCameraActive(true);
-    }
-  }, [
-    cameraPermission,
-    locationPermission,
-    getLocationForVerification,
-    geolocation,
-    geolocationError,
-  ]);
+    setIsCameraActive(true);
+  }, [cameraPermission]);
+ 
 
-  const takePicture = useCallback(async () => {
+  const handleFabPress = useCallback(async () => {
     if (!cameraRef.current) return;
 
     try {
@@ -193,10 +175,7 @@ const VerificationScreen: React.FC = () => {
       setSnackbarVisible(true);
     }
   }, []);
-
-  const stopCamera = useCallback(() => {
-    setIsCameraActive(false);
-  }, []);
+  
 
   const retakePhoto = useCallback(() => {
     setCapturedImage(null);
@@ -206,26 +185,46 @@ const VerificationScreen: React.FC = () => {
   const verifyFace = useCallback(async () => {
     if (!capturedImage || !postingId) return;
 
-    if (!geolocation) {
-      return;
-    }
-
     setIsVerifying(true);
 
     try {
+      if (!locationPermission) {
+        const locationStatus = await Location.requestForegroundPermissionsAsync();
+        setLocationPermission(locationStatus.granted);
+        if (!locationStatus.granted) {
+          setSnackbarMessage(
+            "Location permission is required.",
+          );
+          setSnackbarType("error");
+          setSnackbarVisible(true);
+          setIsVerifying(false);
+          return;
+        }
+      }
+ 
+      const locationData = await getLocationForVerification();
+      
+      if (!locationData) {
+        setSnackbarMessage("Unable to get location. Please try again.");
+        setSnackbarType("error");
+        setSnackbarVisible(true);
+        setIsVerifying(false);
+        return;
+      }
+
       const formData = new FormData();
       formData.append("picture", {
         uri: capturedImage,
         type: "image/jpeg",
         name: "face_verification.jpg",
       } as any);
-      formData.append("latitude", geolocation.latitude.toString());
-      formData.append("longitude", geolocation.longitude.toString());
-      if (geolocation.accuracy) {
-        formData.append("accuracy", geolocation.accuracy.toString());
+      formData.append("latitude", locationData.latitude.toString());
+      formData.append("longitude", locationData.longitude.toString());
+      if (locationData.accuracy) {
+        formData.append("accuracy", locationData.accuracy.toString());
       }
-      if (geolocation.timestamp) {
-        formData.append("timestamp", geolocation.timestamp.toString());
+      if (locationData.timestamp) {
+        formData.append("timestamp", locationData.timestamp.toString());
       }
 
       // const response = await fetch(`${API_CONFIG.REST_API_URL}/posting/${postingId}/verify`, {
@@ -261,14 +260,11 @@ const VerificationScreen: React.FC = () => {
     } finally {
       setIsVerifying(false);
     }
-  }, [capturedImage, postingId, geolocation]);
-
-  const retryLocation = useCallback(async () => {
-    await getLocationForVerification();
-  }, [getLocationForVerification]);
+  }, [capturedImage, postingId, locationPermission, getLocationForVerification, geolocation]);
+ 
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.contentContainer}
@@ -285,45 +281,12 @@ const VerificationScreen: React.FC = () => {
             loading={false}
           />
 
-          <Text variant="bodyLarge" style={styles.instructionText}>
+         {!capturedImage && <Text variant="bodyLarge" style={styles.instructionText}>
             {" "}
             Capture a photo of the team member’s face to verify their identity.
-          </Text>
+          </Text>}
 
-          {isGettingLocation && (
-            <View style={styles.alert}>
-              <Text style={styles.alertText}>Getting your location...</Text>
-            </View>
-          )}
 
-          {geolocationError && (
-            <View style={styles.warningAlert}>
-              <Text style={styles.alertText}>Location: {geolocationError}</Text>
-              <Button mode="text" onPress={retryLocation} compact>
-                Retry
-              </Button>
-            </View>
-          )}
-
-          {geolocation && (
-            <View style={styles.successAlert}>
-              <Text style={styles.alertText}>Location enabled</Text>
-            </View>
-          )}
-
-          {!isCameraActive && !capturedImage && (
-            <View style={styles.buttonContainer}>
-              <Button
-                mode="contained"
-                onPress={handleStartVerification}
-                disabled={!postingId}
-                style={styles.startButton}
-                icon="camera"
-              >
-                Start Face Verification
-              </Button>
-            </View>
-          )}
 
           {isCameraActive && (
             <View style={styles.cameraSection}>
@@ -335,24 +298,6 @@ const VerificationScreen: React.FC = () => {
                   mode="picture"
                   responsiveOrientationWhenOrientationLocked={false}
                 />
-              </View>
-
-              <View style={styles.cameraButtons}>
-                <Button
-                  mode="contained"
-                  onPress={takePicture}
-                  style={styles.captureButton}
-                  icon="camera"
-                >
-                  Capture Photo
-                </Button>
-                <Button
-                  mode="outlined"
-                  onPress={stopCamera}
-                  style={styles.cancelButton}
-                >
-                  Cancel
-                </Button>
               </View>
             </View>
           )}
@@ -366,20 +311,14 @@ const VerificationScreen: React.FC = () => {
                 source={{ uri: capturedImage }}
                 style={styles.capturedImage}
                 resizeMode="contain"
-              />
-
-              {!geolocation && (
-                <Text variant="bodyMedium" style={styles.locationRequired}>
-                  Location is required to proceed with verification
-                </Text>
-              )}
+              /> 
 
               <View style={styles.verifyButtons}>
                 <Button
                   mode="contained"
                   onPress={verifyFace}
                   loading={isVerifying}
-                  disabled={isVerifying || !postingId || !geolocation}
+                  disabled={isVerifying || !postingId}
                   style={styles.verifyButton}
                 >
                   {isVerifying ? "Verifying..." : "Verify Face"}
@@ -398,6 +337,15 @@ const VerificationScreen: React.FC = () => {
         </View>
       </ScrollView>
 
+      {postingId && !capturedImage && (
+        <FAB
+          icon="camera"
+          color="white"
+          onPress={handleFabPress}
+          style={styles.fab}
+        />
+      )}
+
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
@@ -408,7 +356,7 @@ const VerificationScreen: React.FC = () => {
       >
         {snackbarMessage}
       </Snackbar>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -529,16 +477,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   verifyButtons: {
-    flexDirection: "row",
+    flexDirection: "column",
     justifyContent: "center",
     gap: 16,
   },
   verifyButton: {
-    flex: 1,
     maxWidth: 150,
   },
   retakeButton: {
-    flex: 1,
     maxWidth: 150,
   },
   title: {
@@ -553,6 +499,16 @@ const styles = StyleSheet.create({
   },
   permissionButton: {
     alignSelf: "center",
+  },
+  fab: {
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 100,
+    width: 60,height: 60,
+    justifyContent: 'center',alignItems: 'center',
+    backgroundColor: 'green',
+    borderRadius: 50
   },
 });
 
