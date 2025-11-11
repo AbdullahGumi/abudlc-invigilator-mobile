@@ -20,6 +20,7 @@ import useAuth from "../../hooks/useAuth";
 const LoginScreen: React.FC = () => {
   const { setAuthState } = useAuth();
   const { login, loading, error, onReset } = useLoginWithPassword();
+  const [roleError, setRoleError] = React.useState<string | null>(null);
 
   const { control, handleSubmit } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -30,115 +31,127 @@ const LoginScreen: React.FC = () => {
   });
 
   const onSubmit = async (values: LoginFormData) => {
-    const data = await login(values);
+    try {
+      setRoleError(null);
+      const data = await login(values);
 
-    if (data?.accessToken && data?.refreshToken) {
-      await setAuthState({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-      });
+      if (data?.accessToken && data?.refreshToken) {
+        await setAuthState({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        setRoleError(error.message);
+      }
     }
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <View style={styles.header}>
-        <Logo size={150} />
-      </View>
-
-      <View style={styles.formContainer}>
-        <Text variant="titleMedium" style={styles.title}>
-          Login to continue
-        </Text>
-
-        <View style={styles.form}>
-          <Controller
-            control={control}
-            name="email"
-            render={({
-              field: { onChange, onBlur, value },
-              fieldState: { error },
-            }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  label="Email"
-                  value={value}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  mode="outlined"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  error={!!error}
-                  disabled={loading}
-                />
-                <HelperText type="error" visible={!!error}>
-                  {error?.message}
-                </HelperText>
-              </View>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="password"
-            render={({
-              field: { onChange, onBlur, value },
-              fieldState: { error },
-            }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  label="Password"
-                  value={value}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  mode="outlined"
-                  secureTextEntry
-                  autoComplete="password"
-                  error={!!error}
-                  disabled={loading}
-                />
-                <HelperText type="error" visible={!!error}>
-                  {error?.message}
-                </HelperText>
-              </View>
-            )}
-          />
-
-          <Button
-            mode="contained"
-            onPress={handleSubmit(onSubmit)}
-            loading={loading}
-            disabled={loading}
-            style={styles.loginButton}
-          >
-            Login
-          </Button>
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <View style={styles.header}>
+          <Logo size={150} />
         </View>
-      </View>
 
-      <View style={styles.footer}>
-        <Text variant="bodySmall" style={styles.copyright}>
-          © {new Date().getFullYear()} Ahmadu Bello University, Zaria. Distance
-          Learning Centre.
-        </Text>
-      </View>
+        <View style={styles.formContainer}>
+          <Text variant="titleMedium" style={styles.title}>
+            Login to continue
+          </Text>
 
-      {error && (
+          <View style={styles.form}>
+            <Controller
+              control={control}
+              name="email"
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error },
+              }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label="Email"
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    mode="outlined"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    error={!!error}
+                    disabled={loading}
+                  />
+                  <HelperText type="error" visible={!!error}>
+                    {error?.message}
+                  </HelperText>
+                </View>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="password"
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error },
+              }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    label="Password"
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    mode="outlined"
+                    secureTextEntry
+                    autoComplete="password"
+                    error={!!error}
+                    disabled={loading}
+                  />
+                  <HelperText type="error" visible={!!error}>
+                    {error?.message}
+                  </HelperText>
+                </View>
+              )}
+            />
+
+            <Button
+              mode="contained"
+              onPress={handleSubmit(onSubmit)}
+              loading={loading}
+              disabled={loading}
+              style={styles.loginButton}
+            >
+              Login
+            </Button>
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          <Text variant="bodySmall" style={styles.copyright}>
+            © {new Date().getFullYear()} Ahmadu Bello University, Zaria.
+            Distance Learning Centre.
+          </Text>
+        </View>
+      </ScrollView>
+
+      {(error || roleError) && (
         <Snackbar
-          visible={!!error}
-          onDismiss={onReset}
+          visible={!!(error || roleError)}
+          onDismiss={() => {
+            onReset();
+            setRoleError(null);
+          }}
           style={{
             backgroundColor: "#F44336",
           }}
         >
-          {error?.message}
+          {error?.message || roleError}
         </Snackbar>
       )}
-    </ScrollView>
+    </>
   );
 };
 
