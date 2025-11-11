@@ -1,68 +1,53 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { Menu, Button, Text } from "react-native-paper";
+import { Text } from "react-native-paper";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import SelectDropdown from "react-native-select-dropdown";
 import { Posting } from "../types";
 
 interface SelectTeamMemberProps {
-  value: string;
   onChange: (value: string) => void;
   teamMembers: Posting[];
   loading?: boolean;
 }
 
 const SelectTeamMember: React.FC<SelectTeamMemberProps> = ({
-  value,
   onChange,
   teamMembers,
   loading = false,
 }) => {
-  const [visible, setVisible] = React.useState(false);
-  const [menuKey, setMenuKey] = React.useState(0);  
-  const selectedMember = teamMembers.find((member) => member.id === value);
-
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => {
-    setVisible(false);
-    setMenuKey(prev => prev + 1); 
-  };
-
-  const handleSelect = (memberId: string) => {
-    onChange(memberId);
-    closeMenu();
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Select Team Member</Text>
-      <Menu
-        key={menuKey} 
-        visible={visible}
-        onDismiss={closeMenu}
-        anchor={
-          <Button
-            mode="outlined"
-            onPress={openMenu}
-            style={styles.selectButton}
-            disabled={loading}
-            loading={loading}
-          >
-            {selectedMember
-              ? `${selectedMember.user.fullName} (${selectedMember.user.staffId})`
-              : "Select a team member..."}
-          </Button>
-        }
-        contentStyle={{
-          backgroundColor: 'white'
+      <SelectDropdown
+        data={teamMembers}
+        onSelect={(selectedItem: Posting) => {
+          onChange(selectedItem.id);
         }}
-      >
-        {teamMembers.map((member) => (
-          <Menu.Item
-            key={member.id}
-            onPress={() => handleSelect(member.id)}
-            title={`${member.user.fullName} (${member.user.staffId})`}
-          />
-        ))}
-      </Menu>
+        disabled={loading}
+        renderButton={(selectedItem: Posting | null, isOpened: boolean) => (
+          <View style={styles.selectButton}>
+            <Text style={styles.buttonText}>
+              {selectedItem
+                ? `${selectedItem.user.fullName} (${selectedItem.user.staffId})`
+                : "Select a team member..."}
+            </Text>
+            <MaterialIcons
+              name={isOpened ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+              size={24}
+              color="#666"
+              style={styles.dropdownIcon}
+            />
+          </View>
+        )}
+        renderItem={(item: Posting) => (
+          <View style={styles.row}>
+            <Text style={styles.rowText}>
+              {`${item.user.fullName} (${item.user.staffId})`}
+            </Text>
+          </View>
+        )}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 };
@@ -72,15 +57,38 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 16,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 8,
-    color: "#000",
-  },
   selectButton: {
     width: "100%",
-    justifyContent: "flex-start",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
+    padding: 12,
+    backgroundColor: "#fff",
+  },
+  buttonText: {
+    textAlign: "left",
+    fontSize: 16,
+    color: "#000",
+  },
+  dropdown: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
+  },
+  row: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  rowText: {
+    fontSize: 16,
+    color: "#000",
+  },
+  dropdownIcon: {
+    position: "absolute",
+    right: 12,
   },
 });
 
