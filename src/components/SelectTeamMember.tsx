@@ -17,10 +17,14 @@ const SelectTeamMember: React.FC<SelectTeamMemberProps> = ({
   loading = false,
 }) => {
   const [visible, setVisible] = React.useState(false);
+  const [menuKey, setMenuKey] = React.useState(0);  
   const selectedMember = teamMembers.find((member) => member.id === value);
 
   const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
+  const closeMenu = () => {
+    setVisible(false);
+    setMenuKey(prev => prev + 1); 
+  };
 
   const handleSelect = (memberId: string) => {
     onChange(memberId);
@@ -31,6 +35,7 @@ const SelectTeamMember: React.FC<SelectTeamMemberProps> = ({
     <View style={styles.container}>
       <Text style={styles.label}>Select Team Member</Text>
       <Menu
+        key={menuKey} 
         visible={visible}
         onDismiss={closeMenu}
         anchor={
@@ -46,6 +51,9 @@ const SelectTeamMember: React.FC<SelectTeamMemberProps> = ({
               : "Select a team member..."}
           </Button>
         }
+        contentStyle={{
+          backgroundColor: 'white'
+        }}
       >
         {teamMembers.map((member) => (
           <Menu.Item
