@@ -27,41 +27,33 @@ export default function useLoginWithPassword() {
     },
   );
 
-  const login = useCallback(
-    async (values: LoginFormData) => {
-      console.log("login", values);
-      const { data } = await mutate({
-        variables: {
-          input: {
-            identityType: IdentityType.Email,
-            passwordType: PasswordType.Database,
-            identity: values.email,
-            password: values.password,
-          },
+  const login = useCallback(async (values: LoginFormData) => {
+    console.log("login", values);
+    const { data } = await mutate({
+      variables: {
+        input: {
+          identityType: IdentityType.Email,
+          passwordType: PasswordType.Database,
+          identity: values.email,
+          password: values.password,
         },
-        update(cache, { data }) {
-          if (data?.loginWithPassword.user) {
-            const { user } = data.loginWithPassword;
+      },
+      update(cache, { data }) {
+        if (data?.loginWithPassword.user) {
+          const { user } = data.loginWithPassword;
 
-            cache.writeQuery({
-              query: GET_USER_SESSION,
-              data: {
-                me: user,
-              },
-            });
-          }
-        },
-      });
+          cache.writeQuery({
+            query: GET_USER_SESSION,
+            data: {
+              me: user,
+            },
+          });
+        }
+      },
+    });
 
-      const loginData = data?.loginWithPassword;
-      if (loginData?.user?.userRole?.role?.name !== "team_lead") {
-        throw new Error("Access denied.");
-      }
-
-      return loginData;
-    },
-    [mutate],
-  );
+    return data?.loginWithPassword;
+  }, []);
 
   return {
     data: data?.loginWithPassword,
