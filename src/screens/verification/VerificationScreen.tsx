@@ -131,9 +131,21 @@ const VerificationScreen = () => {
         style={styles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No recent verifications found</Text>
-          </View>
+          searchText.trim() ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>No Results Found</Text>
+              <Text style={styles.emptySubtitle}>
+                No verifications match &quot;{searchText}&quot;
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>No Recent Verifications</Text>
+              <Text style={styles.emptySubtitle}>
+                Team member verifications will appear here once completed
+              </Text>
+            </View>
+          )
         }
       />
 
@@ -242,7 +254,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 50,
+    paddingVertical: 60,
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 20,
   },
   emptyText: {
     fontSize: 16,

@@ -310,8 +310,8 @@ const TeamScreen = () => {
 
           {!capturedImage && isCameraActive && (
             <Text variant="bodyLarge" style={styles.instructionText}>
-              Capture a photo of the selected team member's face to verify their
-              identity.
+              Capture a photo of the selected team member&apos;s face to verify
+              their identity.
             </Text>
           )}
 
@@ -372,6 +372,23 @@ const TeamScreen = () => {
               scrollEnabled={false}
               contentContainerStyle={styles.gridContainer}
               style={styles.membersGrid}
+              ListEmptyComponent={
+                searchQuery.trim() ? (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyTitle}>No Results Found</Text>
+                    <Text style={styles.emptySubtitle}>
+                      No team members match &quot;{searchQuery}&quot;
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyTitle}>No Team Members</Text>
+                    <Text style={styles.emptySubtitle}>
+                      Your team members will appear here once assigned
+                    </Text>
+                  </View>
+                )
+              }
             />
           )}
         </View>
@@ -563,6 +580,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "green",
     borderRadius: 50,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 60,
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 20,
   },
 });
 
