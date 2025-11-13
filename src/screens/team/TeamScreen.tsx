@@ -5,25 +5,25 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  TextInput,
+  FlatList,
 } from "react-native";
 import { Text, Button, Snackbar, FAB, Avatar } from "react-native-paper";
 import { Camera, CameraView } from "expo-camera";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 import { GeolocationData } from "../../types";
-import SelectTeamMember from "../../components/SelectTeamMember";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CONFIG, STORAGE_KEYS } from "../../constants";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import { useTeamMembers } from "../../hooks/useTeamMembers";
 
-const VerificationScreen = () => {
-  const [postingId, setPostingId] = useState<string>("");
-  const [cameraPermission, setCameraPermission] = useState<boolean | null>(
-    null,
-  );
+const TeamScreen = () => {
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+
   const [locationPermission, setLocationPermission] = useState<boolean | null>(
     null,
   );
@@ -36,34 +36,25 @@ const VerificationScreen = () => {
   const [snackbarType, setSnackbarType] = useState<"success" | "error">(
     "success",
   );
-  const [attendanceExpanded, setAttendanceExpanded] = useState(false);
-  const [resetTrigger, setResetTrigger] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const cameraRef = useRef<CameraView>(null);
   const navigation = useNavigation();
   const { user } = useCurrentUser();
-  const {
-    data: teamMembersData,
-    loading: teamMembersLoading,
-    refetch,
-  } = useTeamMembers();
-  const teamMembers = teamMembersData;
+  const { data: teamMembersData, refetch } = useTeamMembers();
+
+  const filteredTeamMembers =
+    teamMembersData?.filter((member) => {
+      if (!searchQuery) return true;
+      const fullName = member.user.fullName?.toLowerCase() || "";
+      const staffId = member.user.staffId?.toLowerCase() || "";
+      const query = searchQuery.toLowerCase();
+      return fullName.includes(query) || staffId.includes(query);
+    }) || [];
 
   React.useEffect(() => {
     requestPermissions();
   }, []);
-
-  React.useEffect(() => {
-    if (postingId && !isCameraActive && !capturedImage) {
-      startCameraImmediately();
-    }
-  }, [postingId]);
-
-  React.useEffect(() => {
-    if (isCameraActive) {
-      setAttendanceExpanded(false);
-    }
-  }, [isCameraActive]);
 
   useFocusEffect(
     useCallback(() => {
@@ -73,8 +64,7 @@ const VerificationScreen = () => {
 
   const requestPermissions = async () => {
     try {
-      const cameraStatus = await Camera.requestCameraPermissionsAsync();
-      setCameraPermission(cameraStatus.granted);
+      await Camera.requestCameraPermissionsAsync();
 
       const locationStatus = await Location.requestForegroundPermissionsAsync();
       setLocationPermission(locationStatus.granted);
@@ -110,23 +100,34 @@ const VerificationScreen = () => {
       }
     }, [getCurrentLocation]);
 
-  const startCameraImmediately = useCallback(async () => {
-    if (!cameraPermission) {
-      const cameraStatus = await Camera.requestCameraPermissionsAsync();
-      setCameraPermission(cameraStatus.granted);
-      if (!cameraStatus.granted) {
-        setSnackbarMessage(
-          "Camera permission is required for face verification. Please grant permission and try again.",
-        );
-        setSnackbarType("error");
-        setSnackbarVisible(true);
-        return;
-      }
-    }
-
-    setCapturedImage(null);
+  const handleMemberPress = useCallback((memberId: string) => {
+    setSelectedMemberId(memberId);
     setIsCameraActive(true);
-  }, [cameraPermission]);
+  }, []);
+
+  const handleFabPress = useCallback(async () => {
+    if (!cameraRef.current) return;
+
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.8,
+        base64: false,
+        exif: false,
+      });
+
+      if (photo?.uri) {
+        setCapturedImage(photo.uri);
+        setIsCameraActive(false);
+      } else {
+        throw new Error("Failed to capture image");
+      }
+    } catch (error) {
+      console.error("Error taking picture:", error);
+      setSnackbarMessage("Failed to capture image");
+      setSnackbarType("error");
+      setSnackbarVisible(true);
+    }
+  }, []);
 
   const retakePhoto = useCallback(() => {
     setCapturedImage(null);
@@ -138,7 +139,7 @@ const VerificationScreen = () => {
   }, [navigation]);
 
   const verifyFace = useCallback(async () => {
-    if (!capturedImage || !postingId) return;
+    if (!capturedImage || !selectedMemberId) return;
 
     setIsVerifying(true);
 
@@ -183,7 +184,7 @@ const VerificationScreen = () => {
       }
 
       const response = await fetch(
-        `${CONFIG.REST_API_URL}/posting/${postingId}/verify`,
+        `${CONFIG.REST_API_URL}/posting/${selectedMemberId}/verify`,
         {
           method: "POST",
           headers: {
@@ -199,10 +200,9 @@ const VerificationScreen = () => {
       if (response.ok && data.success) {
         setSnackbarMessage("Face verified successfully");
         setSnackbarType("success");
-        setPostingId("");
+        setSelectedMemberId("");
         setCapturedImage(null);
         setGeolocation(null);
-        setResetTrigger((prev) => prev + 1);
         refetch();
       } else {
         console.log(data);
@@ -222,11 +222,45 @@ const VerificationScreen = () => {
     }
   }, [
     capturedImage,
-    postingId,
+    selectedMemberId,
     locationPermission,
     getLocationForVerification,
     geolocation,
   ]);
+
+  const renderTeamMember = ({
+    item,
+  }: {
+    item: (typeof filteredTeamMembers)[0];
+  }) => (
+    <TouchableOpacity
+      style={styles.memberCard}
+      onPress={() => handleMemberPress(item.id)}
+      disabled={isVerifying}
+    >
+      {item.user.picture?.uri ? (
+        <Image
+          source={{ uri: item.user.picture.uri }}
+          style={styles.memberImage}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={styles.memberAvatarFallback}>
+          <Text style={styles.memberAvatarText}>
+            {item.user.fullName?.[0]?.toUpperCase()}
+          </Text>
+        </View>
+      )}
+      <View style={styles.memberInfo}>
+        <Text style={styles.memberName} numberOfLines={1}>
+          {item.user.fullName}
+        </Text>
+        <Text style={styles.memberId} numberOfLines={1}>
+          {item.user.staffId}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -237,9 +271,12 @@ const VerificationScreen = () => {
       >
         <View style={styles.centerContainer}>
           <View style={styles.headerContainer}>
-            <Text variant="headlineLarge" style={styles.mainTitle}>
-              Face Verification
-            </Text>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={20} color="#666" />
+            </TouchableOpacity>
             {user?.picture?.uri ? (
               <Avatar.Image
                 size={50}
@@ -261,24 +298,19 @@ const VerificationScreen = () => {
             )}
           </View>
 
-          <SelectTeamMember
-            key={resetTrigger}
-            onChange={(value) => {
-              setPostingId(value);
-              if (value === "") {
-                setIsCameraActive(false);
-                setCapturedImage(null);
-              }
-            }}
-            teamMembers={teamMembers}
-            loading={teamMembersLoading}
-            disabled={isVerifying}
-          />
+          {!isCameraActive && !capturedImage && (
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search team members..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#999"
+            />
+          )}
 
           {!capturedImage && isCameraActive && (
             <Text variant="bodyLarge" style={styles.instructionText}>
-              {" "}
-              Capture a photo of the team member’s face to verify their
+              Capture a photo of the selected team member's face to verify their
               identity.
             </Text>
           )}
@@ -313,7 +345,7 @@ const VerificationScreen = () => {
                   mode="contained"
                   onPress={verifyFace}
                   loading={isVerifying}
-                  disabled={isVerifying || !postingId}
+                  disabled={isVerifying || !selectedMemberId}
                   style={styles.verifyButton}
                 >
                   {isVerifying ? "Verifying..." : "Verify Face"}
@@ -330,82 +362,27 @@ const VerificationScreen = () => {
             </View>
           )}
 
-          {(() => {
-            const attendanceRecords =
-              teamMembersData?.flatMap((member) =>
-                member.attendance.map((attendance) => ({
-                  member,
-                  attendance,
-                })),
-              ) || [];
-
-            return attendanceRecords.length > 0 ? (
-              <View style={styles.attendanceSection}>
-                <TouchableOpacity
-                  style={styles.attendanceHeader}
-                  onPress={() => setAttendanceExpanded(!attendanceExpanded)}
-                >
-                  <Text variant="titleMedium" style={styles.attendanceTitle}>
-                    Team Attendance ({attendanceRecords.length} records)
-                  </Text>
-                </TouchableOpacity>
-
-                {attendanceExpanded && (
-                  <View style={styles.attendanceList}>
-                    {attendanceRecords
-                      .sort(
-                        (a, b) =>
-                          new Date(b.attendance.createdAt).getTime() -
-                          new Date(a.attendance.createdAt).getTime(),
-                      )
-                      .map(({ member, attendance }) => (
-                        <View
-                          key={`${member.id}-${attendance.id}`}
-                          style={styles.attendanceCard}
-                        >
-                          <Image
-                            source={{ uri: attendance.picture?.uri }}
-                            style={styles.attendanceImage}
-                            resizeMode="cover"
-                          />
-                          <View style={styles.attendanceDetails}>
-                            <Text style={styles.attendanceName}>
-                              {member.user.fullName}
-                            </Text>
-                            <Text style={styles.attendanceInfo}>
-                              {member.user.staffId} -{" "}
-                              {member?.user?.userRole?.role?.displayName}
-                            </Text>
-                            <Text style={styles.attendanceTime}>
-                              {new Date(attendance.createdAt).toLocaleString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                },
-                              )}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                  </View>
-                )}
-              </View>
-            ) : null;
-          })()}
+          {!isCameraActive && !capturedImage && (
+            <FlatList
+              data={filteredTeamMembers}
+              keyExtractor={(item) => item.id}
+              renderItem={renderTeamMember}
+              numColumns={2}
+              showsVerticalScrollIndicator={false}
+              scrollEnabled={false}
+              contentContainerStyle={styles.gridContainer}
+              style={styles.membersGrid}
+            />
+          )}
         </View>
       </ScrollView>
 
-      {postingId && !capturedImage && (
+      {selectedMemberId && !capturedImage && (
         <FAB
-          icon="account-group"
+          icon="camera"
           size="large"
           color="white"
-          onPress={() => navigation.navigate("Team" as never)}
+          onPress={handleFabPress}
           style={styles.fab}
         />
       )}
@@ -449,9 +426,10 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 24,
   },
-  mainTitle: {
-    textAlign: "center",
-    color: "#000",
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#f5f5f5",
   },
   profileAvatar: {
     backgroundColor: "#f0f0f0",
@@ -468,6 +446,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
+  },
+  searchInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#fff",
+    marginBottom: 16,
   },
   instructionText: {
     textAlign: "center",
@@ -515,6 +502,56 @@ const styles = StyleSheet.create({
   retakeButton: {
     maxWidth: 150,
   },
+  gridContainer: {
+    paddingVertical: 16,
+  },
+  membersGrid: {
+    width: "100%",
+  },
+  memberCard: {
+    flex: 1,
+    backgroundColor: "#fff",
+    margin: 8,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    padding: 12,
+    alignItems: "center",
+  },
+  memberImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 8,
+  },
+  memberAvatarFallback: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#ccc",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  memberAvatarText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  memberInfo: {
+    alignItems: "center",
+  },
+  memberName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#000",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  memberId: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+  },
   fab: {
     position: "absolute",
     margin: 16,
@@ -527,62 +564,6 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
     borderRadius: 50,
   },
-  attendanceSection: {
-    marginTop: 24,
-    width: "100%",
-    alignItems: "center",
-  },
-  attendanceHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    paddingVertical: 12,
-    borderColor: "#e0e0e0",
-    marginBottom: 5,
-  },
-  attendanceTitle: {
-    marginBottom: 0,
-    color: "#000",
-  },
-  attendanceList: {
-    width: "100%",
-    gap: 12,
-  },
-  attendanceCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  attendanceImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 100,
-    marginRight: 12,
-  },
-  attendanceDetails: {
-    flex: 1,
-  },
-  attendanceName: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 4,
-  },
-  attendanceInfo: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 4,
-  },
-  attendanceTime: {
-    fontSize: 12,
-    color: "#888",
-  },
 });
 
-export default VerificationScreen;
+export default TeamScreen;
