@@ -36,6 +36,10 @@ const VerificationScreen = () => {
     navigation.navigate("Profile" as never);
   }, [navigation]);
 
+  const handleEventReportsPress = useCallback(() => {
+    navigation.navigate("EventReports" as never);
+  }, [navigation]);
+
   const attendanceRecords =
     teamMembersData?.flatMap((member) =>
       member.attendance.map((attendance) => ({
@@ -88,7 +92,7 @@ const VerificationScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text variant="headlineLarge" style={styles.mainTitle}>
+        <Text variant="headlineSmall" style={styles.mainTitle}>
           Verifications
         </Text>
         {user?.picture?.uri ? (
@@ -156,6 +160,14 @@ const VerificationScreen = () => {
         onPress={() => navigation.navigate("Team" as never)}
         style={styles.fab}
       />
+
+      <FAB
+        icon="clipboard-text"
+        size="medium"
+        color="white"
+        onPress={handleEventReportsPress}
+        style={styles.eventReportsFab}
+      />
     </SafeAreaView>
   );
 };
@@ -204,6 +216,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "green",
     borderRadius: 50,
+  },
+  eventReportsFab: {
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 140,
+    width: 60,
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#d90606ff",
+    borderRadius: 30,
   },
   attendanceCard: {
     flexDirection: "row",

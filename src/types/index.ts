@@ -5,6 +5,8 @@ export type RootStackParamList = {
   Verification: undefined;
   Profile: undefined;
   Team: undefined;
+  EventReports: undefined;
+  EventReportsHistory: undefined;
 };
 
 export interface GeolocationData {

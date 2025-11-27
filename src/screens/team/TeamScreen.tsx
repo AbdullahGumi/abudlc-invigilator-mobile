@@ -324,25 +324,30 @@ const TeamScreen = () => {
             >
               <Ionicons name="arrow-back" size={20} color="#666" />
             </TouchableOpacity>
-            {user?.picture?.uri ? (
-              <Avatar.Image
-                size={50}
-                source={{
-                  uri: user.picture.uri,
-                }}
-                style={styles.profileAvatar}
-                onTouchEnd={handleProfilePress}
-              />
-            ) : (
-              <TouchableOpacity
-                style={styles.avatarFallback}
-                onPress={handleProfilePress}
-              >
-                <Text style={styles.avatarText}>
-                  {user?.fullName?.[0]?.toUpperCase() || "?"}
-                </Text>
-              </TouchableOpacity>
-            )}
+            <Text variant="headlineSmall" style={styles.titleText}>
+              Add Attendance
+            </Text>
+            <View style={styles.headerActions}>
+              {user?.picture?.uri ? (
+                <Avatar.Image
+                  size={50}
+                  source={{
+                    uri: user.picture.uri,
+                  }}
+                  style={styles.profileAvatar}
+                  onTouchEnd={handleProfilePress}
+                />
+              ) : (
+                <TouchableOpacity
+                  style={styles.avatarFallback}
+                  onPress={handleProfilePress}
+                >
+                  <Text style={styles.avatarText}>
+                    {user?.fullName?.[0]?.toUpperCase() || "?"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           {!isCameraActive && !capturedImage && (
@@ -463,7 +468,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    paddingTop: 24,
   },
   centerContainer: {
     alignItems: "center",
@@ -476,6 +480,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     marginBottom: 24,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  reportButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#f5f5f5",
   },
   backButton: {
     padding: 8,
@@ -654,6 +668,10 @@ const styles = StyleSheet.create({
     borderColor: "white",
     alignItems: "center",
     marginHorizontal: 20,
+  },
+  titleText: {
+    textAlign: "center",
+    color: "#000",
   },
 });
 

@@ -6,6 +6,8 @@ import LoginScreen from "../screens/auth/LoginScreen";
 import VerificationScreen from "../screens/verification/VerificationScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import TeamScreen from "../screens/team/TeamScreen";
+import EventReportsScreen from "../screens/eventReports/EventReportsScreen";
+import EventReportsHistoryScreen from "../screens/eventReports/EventReportsHistoryScreen";
 import useAuth from "../hooks/useAuth";
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -25,6 +27,11 @@ const AppNavigator: React.FC = () => {
           <Stack.Screen name="Verification" component={VerificationScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="Team" component={TeamScreen} />
+          <Stack.Screen name="EventReports" component={EventReportsScreen} />
+          <Stack.Screen
+            name="EventReportsHistory"
+            component={EventReportsHistoryScreen}
+          />
         </>
       ) : (
         <>
