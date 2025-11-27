@@ -32,17 +32,14 @@ const ProfileScreen: React.FC = () => {
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
       >
+        <View style={styles.headerContainer}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+            <Ionicons name="arrow-back" size={20} color="#666" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.centerContainer}>
-          <View style={styles.headerContainer}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={handleBackPress}
-            >
-              <Ionicons name="arrow-back" size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.profileCard}>
             <View style={styles.cardContent}>
               <View style={styles.avatarContainer}>
@@ -64,21 +61,24 @@ const ProfileScreen: React.FC = () => {
               </View>
 
               <View style={styles.userInfo}>
-                <Text style={styles.fullName}>{user?.fullName}</Text>
+                <View style={styles.infoRow}>
+                  <Text style={styles.label}>Name</Text>
+                  <Text style={styles.value}>{user?.fullName}</Text>
+                </View>
 
                 <View style={styles.infoRow}>
-                  <Text style={styles.label}>Email:</Text>
+                  <Text style={styles.label}>Email</Text>
                   <Text style={styles.value}>{user?.email}</Text>
                 </View>
 
                 <View style={styles.infoRow}>
-                  <Text style={styles.label}>Staff ID:</Text>
+                  <Text style={styles.label}>Staff ID</Text>
                   <Text style={styles.value}>{user?.staffId}</Text>
                 </View>
 
                 {user?.userRole?.role && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.label}>Role:</Text>
+                    <Text style={styles.label}>Role</Text>
                     <Text style={styles.value}>
                       {user?.userRole.role.displayName}
                     </Text>
@@ -87,14 +87,14 @@ const ProfileScreen: React.FC = () => {
 
                 {user?.rank && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.label}>Rank:</Text>
+                    <Text style={styles.label}>Rank</Text>
                     <Text style={styles.value}>{user?.rank.name}</Text>
                   </View>
                 )}
 
                 {user?.phoneNumber && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.label}>Phone:</Text>
+                    <Text style={styles.label}>Phone</Text>
                     <Text style={styles.value}>{user?.phoneNumber}</Text>
                   </View>
                 )}
@@ -133,12 +133,14 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    paddingTop: 24,
+    // paddingTop: 24,
+    // backgroundColor: "blue",
   },
   centerContainer: {
     alignItems: "center",
     maxWidth: 800,
     width: "100%",
+    // backgroundColor: "red",
   },
   loadingText: {
     fontSize: 16,
@@ -148,7 +150,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    marginBottom: 32,
   },
   backButton: {
     padding: 8,
@@ -174,7 +175,6 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#fff",
     padding: 20,
-    borderWidth: 1,
     borderColor: "#e0e0e0",
     marginBottom: 24,
   },
@@ -183,6 +183,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 16,
+    alignItems: "center",
   },
   avatar: {
     width: 120,
@@ -206,34 +207,35 @@ const styles = StyleSheet.create({
   userInfo: {
     width: "100%",
     alignItems: "center",
+    marginTop: 25,
   },
   fullName: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginTop: 8,
     textAlign: "center",
     color: "#000",
   },
   infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "column",
+    alignItems: "flex-start",
     width: "100%",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
+    paddingVertical: 8,
     borderColor: "#e0e0e0",
-
     marginBottom: 12,
   },
   label: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#000",
+    fontWeight: "300",
+    color: "#666",
+    textAlign: "left",
+    marginBottom: 4,
   },
   value: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#292929ff",
-    textAlign: "right",
+    textAlign: "left",
+    fontWeight: "500",
   },
   buttonContainer: {
     width: "100%",
@@ -245,7 +247,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 16,
     flexDirection: "row",
   },
   logoutButtonText: {

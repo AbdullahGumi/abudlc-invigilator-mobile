@@ -89,7 +89,7 @@ const VerificationScreen = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <Text variant="headlineLarge" style={styles.mainTitle}>
-          Recent Verifications
+          Verifications
         </Text>
         {user?.picture?.uri ? (
           <Avatar.Image

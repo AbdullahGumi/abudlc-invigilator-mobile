@@ -16,6 +16,7 @@ import useLoginWithPassword, {
   type LoginFormData,
 } from "../../hooks/useLoginWithPassword";
 import useAuth from "../../hooks/useAuth";
+import { SNACKBAR_COLORS } from "../../constants";
 
 const LoginScreen: React.FC = () => {
   const { setAuthState } = useAuth();
@@ -132,10 +133,12 @@ const LoginScreen: React.FC = () => {
           visible={!!error}
           onDismiss={onReset}
           style={{
-            backgroundColor: "#F44336",
+            backgroundColor: SNACKBAR_COLORS.ERROR.background,
           }}
         >
-          {error?.message}
+          <Text style={{ color: SNACKBAR_COLORS.ERROR.text }}>
+            {error?.message}
+          </Text>
         </Snackbar>
       )}
     </ScrollView>

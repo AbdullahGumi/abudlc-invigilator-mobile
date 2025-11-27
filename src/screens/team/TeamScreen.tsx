@@ -8,8 +8,9 @@ import {
   TextInput,
   FlatList,
 } from "react-native";
-import { Text, Button, Snackbar, FAB, Avatar } from "react-native-paper";
+import { Text, Button, Snackbar, Avatar } from "react-native-paper";
 import { Camera, CameraView } from "expo-camera";
+import { SNACKBAR_COLORS } from "../../constants";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -29,6 +30,9 @@ const TeamScreen = () => {
   );
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedImageFacing, setCapturedImageFacing] = useState<
+    "front" | "back" | null
+  >(null);
   const [geolocation, setGeolocation] = useState<GeolocationData | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -39,6 +43,7 @@ const TeamScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const cameraRef = useRef<CameraView>(null);
+  const [facing, setFacing] = useState<"front" | "back">("back");
   const navigation = useNavigation();
   const { user } = useCurrentUser();
   const { data: teamMembersData, refetch } = useTeamMembers();
@@ -117,6 +122,7 @@ const TeamScreen = () => {
 
       if (photo?.uri) {
         setCapturedImage(photo.uri);
+        setCapturedImageFacing(facing);
         setIsCameraActive(false);
       } else {
         throw new Error("Failed to capture image");
@@ -127,10 +133,11 @@ const TeamScreen = () => {
       setSnackbarType("error");
       setSnackbarVisible(true);
     }
-  }, []);
+  }, [facing]);
 
   const retakePhoto = useCallback(() => {
     setCapturedImage(null);
+    setCapturedImageFacing(null);
     setIsCameraActive(true);
   }, []);
 
@@ -202,6 +209,7 @@ const TeamScreen = () => {
         setSnackbarType("success");
         setSelectedMemberId("");
         setCapturedImage(null);
+        setCapturedImageFacing(null);
         setGeolocation(null);
         refetch();
       } else {
@@ -227,6 +235,10 @@ const TeamScreen = () => {
     getLocationForVerification,
     geolocation,
   ]);
+
+  const switchCamera = useCallback(() => {
+    setFacing((prev) => (prev === "back" ? "front" : "back"));
+  }, []);
 
   const renderTeamMember = ({
     item,
@@ -261,6 +273,41 @@ const TeamScreen = () => {
       </View>
     </TouchableOpacity>
   );
+
+  if (isCameraActive) {
+    return (
+      <View style={styles.cameraFullContainer}>
+        <View style={styles.cameraTouch}>
+          <CameraView
+            ref={cameraRef}
+            style={styles.camera}
+            facing={facing}
+            mode="picture"
+            responsiveOrientationWhenOrientationLocked={true}
+          />
+        </View>
+        <View style={styles.cameraControlsTop}>
+          <TouchableOpacity
+            onPress={() => setIsCameraActive(false)}
+            style={styles.controlButton}
+          >
+            <Ionicons name="close" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={switchCamera} style={styles.controlButton}>
+            <Ionicons name="camera-reverse" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.captureRow}>
+          <TouchableOpacity
+            onPress={handleFabPress}
+            style={styles.captureButton}
+          >
+            <Ionicons name="camera" size={32} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -308,27 +355,6 @@ const TeamScreen = () => {
             />
           )}
 
-          {!capturedImage && isCameraActive && (
-            <Text variant="bodyLarge" style={styles.instructionText}>
-              Capture a photo of the selected team member&apos;s face to verify
-              their identity.
-            </Text>
-          )}
-
-          {isCameraActive && (
-            <View style={styles.cameraSection}>
-              <View style={styles.cameraContainer}>
-                <CameraView
-                  ref={cameraRef}
-                  style={styles.camera}
-                  facing="back"
-                  mode="picture"
-                  responsiveOrientationWhenOrientationLocked={false}
-                />
-              </View>
-            </View>
-          )}
-
           {capturedImage && (
             <View style={styles.photoSection}>
               <Text variant="titleLarge" style={styles.photoTitle}>
@@ -336,8 +362,14 @@ const TeamScreen = () => {
               </Text>
               <Image
                 source={{ uri: capturedImage }}
-                style={styles.capturedImage}
-                resizeMode="contain"
+                style={[
+                  styles.capturedImage,
+                  {
+                    transform:
+                      capturedImageFacing === "front" ? [{ scaleX: -1 }] : [],
+                  },
+                ]}
+                resizeMode="cover"
               />
 
               <View style={styles.verifyButtons}>
@@ -394,25 +426,27 @@ const TeamScreen = () => {
         </View>
       </ScrollView>
 
-      {selectedMemberId && !capturedImage && (
-        <FAB
-          icon="camera"
-          size="large"
-          color="white"
-          onPress={handleFabPress}
-          style={styles.fab}
-        />
-      )}
-
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
         duration={4000}
         style={{
-          backgroundColor: snackbarType === "success" ? "#4CAF50" : "#F44336",
+          backgroundColor:
+            snackbarType === "success"
+              ? SNACKBAR_COLORS.SUCCESS.background
+              : SNACKBAR_COLORS.ERROR.background,
         }}
       >
-        {snackbarMessage}
+        <Text
+          style={{
+            color:
+              snackbarType === "success"
+                ? SNACKBAR_COLORS.SUCCESS.text
+                : SNACKBAR_COLORS.ERROR.text,
+          }}
+        >
+          {snackbarMessage}
+        </Text>
       </Snackbar>
     </SafeAreaView>
   );
@@ -473,24 +507,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginBottom: 16,
   },
-  instructionText: {
-    textAlign: "center",
-    fontSize: 12,
-    marginBottom: 8,
-    color: "#666",
-  },
-  cameraSection: {
-    marginBottom: 16,
-    width: "100%",
-    alignItems: "center",
-  },
-  cameraContainer: {
-    height: 300,
-    overflow: "hidden",
-    marginVertical: 16,
-    width: "100%",
-    maxWidth: 400,
-  },
+
   camera: {
     flex: 1,
   },
@@ -504,8 +521,8 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   capturedImage: {
-    width: 300,
-    height: 300,
+    width: 400,
+    height: 400,
     marginBottom: 16,
   },
   verifyButtons: {
@@ -569,18 +586,7 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
   },
-  fab: {
-    position: "absolute",
-    margin: 16,
-    right: 0,
-    bottom: 50,
-    width: 75,
-    height: 75,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "green",
-    borderRadius: 50,
-  },
+
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
@@ -601,6 +607,53 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     lineHeight: 20,
+  },
+  cameraFullContainer: {
+    flex: 1,
+    backgroundColor: "black",
+  },
+  cameraTouch: {
+    flex: 1,
+  },
+  cameraControlsTop: {
+    position: "absolute",
+    top: 60,
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    zIndex: 1,
+  },
+  controlButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  captureRow: {
+    position: "absolute",
+    bottom: 50,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+  },
+  captureButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "green",
+    justifyContent: "center",
+    borderWidth: 4,
+    borderColor: "white",
+    alignItems: "center",
+    marginHorizontal: 20,
   },
 });
 
