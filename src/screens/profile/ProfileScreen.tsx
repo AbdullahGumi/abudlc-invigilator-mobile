@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Text,
   Image,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -25,6 +26,10 @@ const ProfileScreen: React.FC = () => {
 
   const handleBackPress = () => {
     navigation.goBack();
+  };
+
+  const handlePrivacyPolicy = () => {
+    Linking.openURL("https://abudlc.com/privacy-policy");
   };
 
   return (
@@ -114,6 +119,10 @@ const ProfileScreen: React.FC = () => {
                 style={styles.logoutIcon}
               />
               <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handlePrivacyPolicy}>
+              <Text style={styles.privacyPolicyText}>Privacy Policy</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -257,6 +266,13 @@ const styles = StyleSheet.create({
   logoutIcon: {
     color: "#d50505ff",
     marginRight: 8,
+  },
+  privacyPolicyText: {
+    fontSize: 14,
+    color: "#666",
+    textDecorationLine: "underline",
+    marginTop: 16,
+    textAlign: "center",
   },
 });
 
