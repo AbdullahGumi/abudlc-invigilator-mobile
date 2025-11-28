@@ -42,6 +42,13 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow ABUDLC Invigilator to access your photos for event reports.",
+          "cameraPermission": "Allow ABUDLC Invigilator to access your camera for event reports."
+        }
+      ],
+      [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow ABUDLC Invigilator to access your location for attendance verification."
