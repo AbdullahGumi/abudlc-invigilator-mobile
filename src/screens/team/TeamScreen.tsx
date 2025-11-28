@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -9,7 +9,7 @@ import {
   FlatList,
 } from "react-native";
 import { Text, Button, Snackbar, Avatar } from "react-native-paper";
-import { Camera, CameraView } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import { SNACKBAR_COLORS } from "../../constants";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
@@ -28,11 +28,7 @@ const TeamScreen = () => {
   const [locationPermission, setLocationPermission] = useState<boolean | null>(
     null,
   );
-  const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [capturedImageFacing, setCapturedImageFacing] = useState<
-    "front" | "back" | null
-  >(null);
   const [geolocation, setGeolocation] = useState<GeolocationData | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -41,9 +37,6 @@ const TeamScreen = () => {
     "success",
   );
   const [searchQuery, setSearchQuery] = useState("");
-
-  const cameraRef = useRef<CameraView>(null);
-  const [facing, setFacing] = useState<"front" | "back">("back");
   const navigation = useNavigation();
   const { user } = useCurrentUser();
   const { data: teamMembersData, refetch } = useTeamMembers();
@@ -69,10 +62,13 @@ const TeamScreen = () => {
 
   const requestPermissions = async () => {
     try {
-      await Camera.requestCameraPermissionsAsync();
-
+      const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
       const locationStatus = await Location.requestForegroundPermissionsAsync();
       setLocationPermission(locationStatus.granted);
+
+      if (!cameraStatus.granted) {
+        console.warn("Camera permission not granted");
+      }
     } catch (error) {
       console.warn("Error requesting permissions:", error);
     }
@@ -105,41 +101,49 @@ const TeamScreen = () => {
       }
     }, [getCurrentLocation]);
 
-  const handleMemberPress = useCallback((memberId: string) => {
-    setSelectedMemberId(memberId);
-    setIsCameraActive(true);
-  }, []);
-
-  const handleFabPress = useCallback(async () => {
-    if (!cameraRef.current) return;
-
+  const openCamera = useCallback(async (memberId: string) => {
     try {
-      const photo = await cameraRef.current.takePictureAsync({
+      const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+      if (!cameraStatus.granted) {
+        setSnackbarMessage("Camera permission is required to take photos");
+        setSnackbarType("error");
+        setSnackbarVisible(true);
+        return false;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
         quality: 0.8,
-        base64: false,
-        exif: false,
+        allowsEditing: false,
+        aspect: [1, 1],
       });
 
-      if (photo?.uri) {
-        setCapturedImage(photo.uri);
-        setCapturedImageFacing(facing);
-        setIsCameraActive(false);
-      } else {
-        throw new Error("Failed to capture image");
+      if (!result.canceled && result.assets?.[0]) {
+        setSelectedMemberId(memberId);
+        setCapturedImage(result.assets[0].uri);
+        return true;
       }
+      return false;
     } catch (error) {
       console.error("Error taking picture:", error);
       setSnackbarMessage("Failed to capture image");
       setSnackbarType("error");
       setSnackbarVisible(true);
+      return false;
     }
-  }, [facing]);
-
-  const retakePhoto = useCallback(() => {
-    setCapturedImage(null);
-    setCapturedImageFacing(null);
-    setIsCameraActive(true);
   }, []);
+
+  const handleMemberPress = useCallback(
+    async (memberId: string) => {
+      await openCamera(memberId);
+    },
+    [openCamera],
+  );
+
+  const retakePhoto = useCallback(async () => {
+    if (selectedMemberId) {
+      await openCamera(selectedMemberId);
+    }
+  }, [selectedMemberId, openCamera]);
 
   const handleProfilePress = useCallback(() => {
     navigation.navigate("Profile" as never);
@@ -209,7 +213,6 @@ const TeamScreen = () => {
         setSnackbarType("success");
         setSelectedMemberId("");
         setCapturedImage(null);
-        setCapturedImageFacing(null);
         setGeolocation(null);
         refetch();
       } else {
@@ -235,10 +238,6 @@ const TeamScreen = () => {
     getLocationForVerification,
     geolocation,
   ]);
-
-  const switchCamera = useCallback(() => {
-    setFacing((prev) => (prev === "back" ? "front" : "back"));
-  }, []);
 
   const renderTeamMember = ({
     item,
@@ -273,41 +272,6 @@ const TeamScreen = () => {
       </View>
     </TouchableOpacity>
   );
-
-  if (isCameraActive) {
-    return (
-      <View style={styles.cameraFullContainer}>
-        <View style={styles.cameraTouch}>
-          <CameraView
-            ref={cameraRef}
-            style={styles.camera}
-            facing={facing}
-            mode="picture"
-            responsiveOrientationWhenOrientationLocked={true}
-          />
-        </View>
-        <View style={styles.cameraControlsTop}>
-          <TouchableOpacity
-            onPress={() => setIsCameraActive(false)}
-            style={styles.controlButton}
-          >
-            <Ionicons name="close" size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={switchCamera} style={styles.controlButton}>
-            <Ionicons name="camera-reverse" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.captureRow}>
-          <TouchableOpacity
-            onPress={handleFabPress}
-            style={styles.captureButton}
-          >
-            <Ionicons name="camera" size={32} color="white" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -350,7 +314,7 @@ const TeamScreen = () => {
             </View>
           </View>
 
-          {!isCameraActive && !capturedImage && (
+          {!capturedImage && (
             <TextInput
               style={styles.searchInput}
               placeholder="Search team members..."
@@ -367,13 +331,7 @@ const TeamScreen = () => {
               </Text>
               <Image
                 source={{ uri: capturedImage }}
-                style={[
-                  styles.capturedImage,
-                  {
-                    transform:
-                      capturedImageFacing === "front" ? [{ scaleX: -1 }] : [],
-                  },
-                ]}
+                style={styles.capturedImage}
                 resizeMode="cover"
               />
 
@@ -399,7 +357,7 @@ const TeamScreen = () => {
             </View>
           )}
 
-          {!isCameraActive && !capturedImage && (
+          {!capturedImage && (
             <FlatList
               data={filteredTeamMembers}
               keyExtractor={(item) => item.id}
@@ -522,9 +480,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  camera: {
-    flex: 1,
-  },
   photoSection: {
     marginBottom: 16,
     width: "100%",
@@ -622,53 +577,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 20,
   },
-  cameraFullContainer: {
-    flex: 1,
-    backgroundColor: "black",
-  },
-  cameraTouch: {
-    flex: 1,
-  },
-  cameraControlsTop: {
-    position: "absolute",
-    top: 60,
-    left: 16,
-    right: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    zIndex: 1,
-  },
-  controlButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: 5,
-  },
-  captureRow: {
-    position: "absolute",
-    bottom: 50,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-  },
-  captureButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "green",
-    justifyContent: "center",
-    borderWidth: 4,
-    borderColor: "white",
-    alignItems: "center",
-    marginHorizontal: 20,
-  },
+
   titleText: {
     textAlign: "center",
     color: "#000",

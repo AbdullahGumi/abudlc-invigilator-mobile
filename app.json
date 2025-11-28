@@ -35,13 +35,6 @@
     },
     "plugins": [
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow ABUDLC Invigilator to access your camera to verify team members.",
-          "microphonePermission": false
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "Allow ABUDLC Invigilator to access your photos for event reports.",
