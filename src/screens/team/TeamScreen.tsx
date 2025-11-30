@@ -145,6 +145,12 @@ const TeamScreen = () => {
     }
   }, [selectedMemberId, openCamera]);
 
+  const cancelPhoto = useCallback(() => {
+    setSelectedMemberId("");
+    setCapturedImage(null);
+    setGeolocation(null);
+  }, []);
+
   const handleProfilePress = useCallback(() => {
     navigation.navigate("Profile" as never);
   }, [navigation]);
@@ -329,11 +335,20 @@ const TeamScreen = () => {
               <Text variant="titleLarge" style={styles.photoTitle}>
                 Captured Photo
               </Text>
-              <Image
-                source={{ uri: capturedImage }}
-                style={styles.capturedImage}
-                resizeMode="cover"
-              />
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: capturedImage }}
+                  style={styles.capturedImage}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  style={styles.imageCancelButton}
+                  onPress={cancelPhoto}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="close" size={36} color="#ffffffff" />
+                </TouchableOpacity>
+              </View>
 
               <View style={styles.verifyButtons}>
                 <Button
@@ -452,6 +467,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#f5f5f5",
   },
+
   profileAvatar: {
     backgroundColor: "#f0f0f0",
   },
@@ -487,10 +503,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: "#000",
   },
-  capturedImage: {
-    width: 400,
-    height: 400,
+  imageContainer: {
+    position: "relative",
     marginBottom: 16,
+  },
+  capturedImage: {
+    width: 310,
+    height: 310,
+  },
+  imageCancelButton: {
+    position: "absolute",
+    top: -12,
+    right: -12,
+    backgroundColor: "#d90606ff",
+    borderColor: "#fff",
+    borderWidth: 2,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
   verifyButtons: {
     flexDirection: "column",
