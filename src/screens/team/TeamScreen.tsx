@@ -428,8 +428,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   centerContainer: {
-    alignItems: "center",
-    maxWidth: 800,
     width: "100%",
   },
   headerContainer: {
