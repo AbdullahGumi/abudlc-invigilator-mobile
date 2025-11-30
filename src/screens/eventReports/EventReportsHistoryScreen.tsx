@@ -79,7 +79,7 @@ const EventReportsHistoryScreen: React.FC = () => {
         </Text>
       </View>
 
-      <Text variant="bodyMedium" style={styles.reportBody} numberOfLines={3}>
+      <Text variant="bodyMedium" style={styles.reportBody}>
         {item.body}
       </Text>
 
