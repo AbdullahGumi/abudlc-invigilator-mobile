@@ -288,12 +288,6 @@ const TeamScreen = () => {
       >
         <View style={styles.centerContainer}>
           <View style={styles.headerContainer}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={20} color="#666" />
-            </TouchableOpacity>
             <Text variant="headlineSmall" style={styles.titleText}>
               Add Attendance
             </Text>

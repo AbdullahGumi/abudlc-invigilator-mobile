@@ -2,11 +2,15 @@ import { Posting } from "./__generated__/graphql";
 
 export type RootStackParamList = {
   Login: undefined;
-  Verification: undefined;
+  MainTabs: undefined;
   Profile: undefined;
+  EventReportsHistory: undefined;
+};
+
+export type MainTabParamList = {
+  Verification: undefined;
   Team: undefined;
   EventReports: undefined;
-  EventReportsHistory: undefined;
 };
 
 export interface GeolocationData {

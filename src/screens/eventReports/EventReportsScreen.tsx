@@ -186,12 +186,6 @@ const EventReportsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={20} color="#666" />
-          </TouchableOpacity>
           <Text variant="headlineSmall" style={styles.mainTitle}>
             Event Reports
           </Text>

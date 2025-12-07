@@ -3,10 +3,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 
 import { RootStackParamList } from "../types";
 import LoginScreen from "../screens/auth/LoginScreen";
-import VerificationScreen from "../screens/verification/VerificationScreen";
+import MainTabNavigator from "./MainTabNavigator";
 import ProfileScreen from "../screens/profile/ProfileScreen";
-import TeamScreen from "../screens/team/TeamScreen";
-import EventReportsScreen from "../screens/eventReports/EventReportsScreen";
 import EventReportsHistoryScreen from "../screens/eventReports/EventReportsHistoryScreen";
 import useAuth from "../hooks/useAuth";
 
@@ -24,10 +22,8 @@ const AppNavigator: React.FC = () => {
     >
       {isLoggedIn ? (
         <>
-          <Stack.Screen name="Verification" component={VerificationScreen} />
+          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="Team" component={TeamScreen} />
-          <Stack.Screen name="EventReports" component={EventReportsScreen} />
           <Stack.Screen
             name="EventReportsHistory"
             component={EventReportsHistoryScreen}

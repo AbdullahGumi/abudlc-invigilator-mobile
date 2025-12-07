@@ -3,7 +3,7 @@
     "name": "ABUDLC Invigilator",
     "slug": "abudlc-invigilator",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -51,15 +51,15 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "73e3165d-3048-44d9-b8a2-78747f4143f5"
+        "projectId": "a9acb543-f5ac-4905-b05c-54640701118e"
       }
     },
-    "owner": "abdulgumi",
+    "owner": "abdullahgumi",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/73e3165d-3048-44d9-b8a2-78747f4143f5"
+      "url": "https://u.expo.dev/a9acb543-f5ac-4905-b05c-54640701118e"
     }
   }
 }

@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
-import { Text, FAB, Avatar } from "react-native-paper";
+import { Text, Avatar } from "react-native-paper";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -34,10 +34,6 @@ const VerificationScreen = () => {
 
   const handleProfilePress = useCallback(() => {
     navigation.navigate("Profile" as never);
-  }, [navigation]);
-
-  const handleEventReportsPress = useCallback(() => {
-    navigation.navigate("EventReports" as never);
   }, [navigation]);
 
   const attendanceRecords =
@@ -152,22 +148,6 @@ const VerificationScreen = () => {
           )
         }
       />
-
-      <FAB
-        icon="account-group"
-        size="large"
-        color="white"
-        onPress={() => navigation.navigate("Team" as never)}
-        style={styles.fab}
-      />
-
-      <FAB
-        icon="clipboard-text"
-        size="medium"
-        color="white"
-        onPress={handleEventReportsPress}
-        style={styles.eventReportsFab}
-      />
     </SafeAreaView>
   );
 };
@@ -205,30 +185,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-  fab: {
-    position: "absolute",
-    margin: 16,
-    right: 0,
-    bottom: 50,
-    width: 75,
-    height: 75,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "green",
-    borderRadius: 50,
-  },
-  eventReportsFab: {
-    position: "absolute",
-    margin: 16,
-    right: 0,
-    bottom: 140,
-    width: 60,
-    height: 60,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#d90606ff",
-    borderRadius: 30,
-  },
+
   attendanceCard: {
     flexDirection: "row",
     alignItems: "center",
