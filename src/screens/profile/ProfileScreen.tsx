@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { CONFIG } from "../../constants";
 
 import useCurrentUser from "../../hooks/useCurrentUser";
 import useAuth from "../../hooks/useAuth";
@@ -29,7 +30,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handlePrivacyPolicy = () => {
-    Linking.openURL("https://abudlc.com/privacy-policy");
+    Linking.openURL(CONFIG.PRIVACY_POLICY_URL);
   };
 
   return (

@@ -6,6 +6,7 @@ export const CONFIG = {
   REST_API_URL: `${baseUrl}/v1`,
   APP_ENV: "development",
   CLIENT_ID: "cmetwk06k0001pdcc86avwful",
+  PRIVACY_POLICY_URL: "https://abudlc.deterrence.ng/privacy",
 };
 
 // Storage Keys

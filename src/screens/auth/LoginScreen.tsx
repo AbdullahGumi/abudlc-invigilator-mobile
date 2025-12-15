@@ -1,5 +1,11 @@
 import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Linking,
+  TouchableOpacity,
+} from "react-native";
 import {
   TextInput,
   Button,
@@ -16,7 +22,7 @@ import useLoginWithPassword, {
   type LoginFormData,
 } from "../../hooks/useLoginWithPassword";
 import useAuth from "../../hooks/useAuth";
-import { SNACKBAR_COLORS } from "../../constants";
+import { SNACKBAR_COLORS, CONFIG } from "../../constants";
 
 const LoginScreen: React.FC = () => {
   const { setAuthState } = useAuth();
@@ -39,6 +45,10 @@ const LoginScreen: React.FC = () => {
         refreshToken: data.refreshToken,
       });
     }
+  };
+
+  const handlePrivacyPolicy = () => {
+    Linking.openURL(CONFIG.PRIVACY_POLICY_URL);
   };
 
   return (
@@ -126,6 +136,9 @@ const LoginScreen: React.FC = () => {
           © {new Date().getFullYear()} Ahmadu Bello University, Zaria. Distance
           Learning Centre.
         </Text>
+        <TouchableOpacity onPress={handlePrivacyPolicy}>
+          <Text style={[styles.copyright, styles.link]}>Privacy Policy</Text>
+        </TouchableOpacity>
       </View>
 
       {error && (
@@ -194,6 +207,10 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     fontSize: 12,
+  },
+  link: {
+    textDecorationLine: "underline",
+    marginTop: 8,
   },
 });
 
