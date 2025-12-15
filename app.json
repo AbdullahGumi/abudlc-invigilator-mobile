@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.abudlc.invigilator.mobile",
+      "bundleIdentifier": "com.abudlc.invigilator.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -40,14 +40,15 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow ABUDLC Invigilator to access your photos for event reports.",
-          "cameraPermission": "Allow ABUDLC Invigilator to access your camera for event reports."
+          "photosPermission": "We need access to your photo library to allow you to upload existing photos of attendance sheets or exam irregularities to your reports.",
+          "cameraPermission": "We need access to your camera to allow you to take photos of exam attendance sheets and event incidents directly within the app for reporting purposes."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow ABUDLC Invigilator to access your location for attendance verification."
+          "locationAlwaysAndWhenInUsePermission": "We need your location to verify that you are physically present at the assigned exam center when submitting attendance and incident reports. This ensures the integrity of the invigilation process.",
+          "locationWhenInUsePermission": "We need your location to verify that you are physically present at the assigned exam center when submitting attendance and incident reports. This ensures the integrity of the invigilation process."
         }
       ],
       "expo-secure-store"
