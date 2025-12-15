@@ -60,7 +60,7 @@
     },
     "owner": "abdullahgumi",
     "runtimeVersion": {
-      "policy": "1.0.1"
+      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/a9acb543-f5ac-4905-b05c-54640701118e"
