@@ -17,7 +17,7 @@ export default function useLoginWithPassword() {
     LOGIN_WITH_PASSWORD,
     {
       onError(error) {
-        console.error("Login error:", error);
+        console.log("Login error:", error.message);
       },
       onCompleted(data) {
         if (data.loginWithPassword.message) {

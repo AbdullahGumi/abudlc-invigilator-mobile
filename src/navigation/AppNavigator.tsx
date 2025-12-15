@@ -3,7 +3,9 @@ import { createStackNavigator } from "@react-navigation/stack";
 
 import { RootStackParamList } from "../types";
 import LoginScreen from "../screens/auth/LoginScreen";
-import VerificationScreen from "../screens/verification/VerificationScreen";
+import MainTabNavigator from "./MainTabNavigator";
+import ProfileScreen from "../screens/profile/ProfileScreen";
+import EventReportsHistoryScreen from "../screens/eventReports/EventReportsHistoryScreen";
 import useAuth from "../hooks/useAuth";
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -20,7 +22,12 @@ const AppNavigator: React.FC = () => {
     >
       {isLoggedIn ? (
         <>
-          <Stack.Screen name="Verification" component={VerificationScreen} />
+          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen
+            name="EventReportsHistory"
+            component={EventReportsHistoryScreen}
+          />
         </>
       ) : (
         <>
