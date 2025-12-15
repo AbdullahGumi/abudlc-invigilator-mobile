@@ -2,7 +2,7 @@
   "expo": {
     "name": "ABUDLC Invigilator",
     "slug": "abudlc-invigilator",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -60,7 +60,7 @@
     },
     "owner": "abdullahgumi",
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "1.0.1"
     },
     "updates": {
       "url": "https://u.expo.dev/a9acb543-f5ac-4905-b05c-54640701118e"
