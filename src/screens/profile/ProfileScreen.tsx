@@ -148,7 +148,6 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     alignItems: "center",
-    maxWidth: 800,
     width: "100%",
     // backgroundColor: "red",
   },
